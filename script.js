@@ -84,21 +84,27 @@ function initBarba() {
       enter(data) {
         lenis.scrollTo(0, { immediate: true });
         
-        // Use a small delay to ensure the DOM is fully painted before animating
-        setTimeout(() => {
-          initPageSpecifics(data.next.namespace);
-        }, 100);
-
-        return gsap.from(data.next.container, {
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power2.out'
-        });
+        // Wait for next frame to ensure DOM is ready
+        gsap.set(data.next.container, { opacity: 0 });
+        
+        return gsap.fromTo(data.next.container, 
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.6,
+            ease: 'power2.out',
+            onComplete: () => {
+              // Re-run everything once the new page is visible
+              initPageSpecifics(data.next.namespace);
+            }
+          }
+        );
       }
     }]
   });
 
   barba.hooks.after((data) => {
+    // Update navigation links active state
     const nextUrl = data.next.url.path;
     const linksWrap = document.querySelector('.nav-links');
     
@@ -112,7 +118,9 @@ function initBarba() {
       });
     }
     
+    // Refresh global UI elements
     initNavScramble(); 
+    ScrollTrigger.refresh();
   });
 }
 
@@ -120,19 +128,21 @@ function initBarba() {
    4. PAGE-SPECIFIC INITIALIZATION
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
-  // 1. Kill old scroll triggers to prevent memory leaks/overlap
+  // 1. Clear everything old
   ScrollTrigger.getAll().forEach(t => t.kill());
 
-  // 2. Clear previous SplitType tags to prevent "double-splitting"
+  // 2. Cleanup SplitType leftovers
   document.querySelectorAll('.line, .word, .char').forEach(el => {
     if (el.parentNode) el.outerHTML = el.textContent;
   });
 
-  // 3. Re-run animations for the new container
+  // 3. Re-init animations and force refresh
   initAnimations();
-
-  // 4. Force GSAP to recalculate page positions
-  ScrollTrigger.refresh();
+  
+  // Extra delay to ensure layout is settled
+  setTimeout(() => {
+    ScrollTrigger.refresh();
+  }, 100);
 
   if (namespace === 'portfolio') {
     setupUploader('drop-zone', 'file-input', 'gallery', 'dijoImages');
@@ -184,37 +194,83 @@ function initAnimations() {
 
   // C. General Element Reveals
   gsap.utils.toArray('.reveal-up').forEach(el => {
+    // Skip if handled by text logic
     if (['p', 'h1', 'h2'].includes(el.tagName.toLowerCase())) return;
+    
     gsap.fromTo(el, { opacity: 0, y: 48 }, {
       opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 88%' }
+      scrollTrigger: { 
+        trigger: el, 
+        start: 'top 88%',
+        toggleActions: 'play none none none'
+      }
     });
   });
 
   // D. Stats & Brands
   const statBoxes = gsap.utils.toArray('.stat-box');
-  if (statBoxes.length) gsap.fromTo(statBoxes, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.12, scrollTrigger: { trigger: '.stats', start: 'top 82%' } });
+  if (statBoxes.length) {
+    gsap.fromTo(statBoxes, 
+      { opacity: 0, y: 40, scale: 0.96 }, 
+      { 
+        opacity: 1, y: 0, scale: 1, 
+        duration: 0.8, 
+        ease: 'power3.out', 
+        stagger: 0.12, 
+        scrollTrigger: { trigger: '.stats', start: 'top 82%' } 
+      }
+    );
+  }
 
   const brandTags = gsap.utils.toArray('.brand-tag');
-  if (brandTags.length) gsap.fromTo(brandTags, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.07, scrollTrigger: { trigger: '.brands', start: 'top 88%' } });
+  if (brandTags.length) {
+    gsap.fromTo(brandTags, 
+      { opacity: 0, y: 20 }, 
+      { 
+        opacity: 1, y: 0, 
+        duration: 0.6, 
+        ease: 'power2.out', 
+        stagger: 0.07, 
+        scrollTrigger: { trigger: '.brands', start: 'top 88%' } 
+      }
+    );
+  }
 
   // E. Image parallax
   gsap.utils.toArray('section img:not(.logo-img)').forEach(img => {
-    gsap.to(img, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 } });
+    gsap.to(img, { 
+      yPercent: -12, 
+      ease: 'none', 
+      scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 } 
+    });
   });
 
   // F. Marquee
   const marquee = document.querySelector('.marquee');
   if (marquee) {
     ScrollTrigger.create({
-      trigger: '.marquee-wrapper', start: 'top bottom', end: 'bottom top',
-      onUpdate: self => { marquee.style.animationDuration = Math.max(6, 20 - (Math.abs(self.getVelocity()) / 1000) * 2) + 's'; },
+      trigger: '.marquee-wrapper', 
+      start: 'top bottom', 
+      end: 'bottom top',
+      onUpdate: self => { 
+        marquee.style.animationDuration = Math.max(6, 20 - (Math.abs(self.getVelocity()) / 1000) * 2) + 's'; 
+      },
     });
   }
 
   animateCounters();
   const footer = document.querySelector('footer');
-  if (footer) gsap.fromTo(footer, { opacity: 0 }, { opacity: 1, duration: 1.2, ease: 'power2.out', scrollTrigger: { trigger: footer, start: 'top 95%' } });
+  if (footer) {
+    gsap.fromTo(footer, 
+      { opacity: 0 }, 
+      { 
+        opacity: 1, 
+        duration: 1.2, 
+        ease: 'power2.out', 
+        scrollTrigger: { trigger: footer, start: 'top 95%' } 
+      }
+    );
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -335,10 +391,19 @@ function animateCounters() {
   if (!yearsEl || !brandsEl) return;
   const obj = { years: 0, brands: 0 };
   ScrollTrigger.create({
-    trigger: yearsEl.closest('.stats'), start: 'top 80%', once: true,
+    trigger: yearsEl.closest('.stats'), 
+    start: 'top 80%', 
+    once: true,
     onEnter: () => {
-      gsap.to(obj, { years: 5, brands: 25, duration: 2, ease: 'power2.out',
-        onUpdate: () => { yearsEl.textContent = Math.floor(obj.years); brandsEl.textContent = Math.floor(obj.brands); }
+      gsap.to(obj, { 
+        years: 5, 
+        brands: 25, 
+        duration: 2, 
+        ease: 'power2.out',
+        onUpdate: () => { 
+          yearsEl.textContent = Math.floor(obj.years); 
+          brandsEl.textContent = Math.floor(obj.brands); 
+        }
       });
     }
   });
@@ -358,8 +423,10 @@ function setupUploader(zoneId, inputId, galleryId, storageKey) {
       reader.readAsDataURL(file);
     });
   });
-  // Load saved images
-  try { JSON.parse(localStorage.getItem(storageKey) || '[]').forEach(src => addImageToGallery(src)); } catch(e) {}
+  
+  try { 
+    JSON.parse(localStorage.getItem(storageKey) || '[]').forEach(src => addImageToGallery(src)); 
+  } catch(e) {}
 }
 
 function addImageToGallery(src) {
