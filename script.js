@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const namespace = nsElement ? nsElement.dataset.barbaNamespace : 'other';
   const hasPlayedLoader = sessionStorage.getItem('dijo_loader_played');
 
+  // Loader only appears on first load or if logo is clicked
   if (!hasPlayedLoader) {
     sessionStorage.setItem('dijo_loader_played', 'true');
     initLoader(() => initPageSpecifics(namespace));
@@ -48,9 +49,17 @@ function initGlobalEvents() {
   const navLinks  = document.querySelector('.nav-links');
   if (hamburger && navLinks) {
     hamburger.addEventListener('click', () => {
-      hamburger.classList.toggle('open');
+      const isOpen = hamburger.classList.toggle('open');
       navLinks.classList.toggle('open');
+
+      // Scramble all links when opening mobile menu
+      if (isOpen) {
+        navLinks.querySelectorAll('a').forEach(link => {
+          startScramble(link);
+        });
+      }
     });
+    
     navLinks.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         hamburger.classList.remove('open');
@@ -59,6 +68,7 @@ function initGlobalEvents() {
     });
   }
 
+  // Clear memory on logo click to replay loader
   document.querySelectorAll('.logo-container').forEach(logo => {
     logo.addEventListener('click', () => {
       sessionStorage.removeItem('dijo_loader_played');
@@ -84,7 +94,7 @@ function initBarba() {
       enter(data) {
         lenis.scrollTo(0, { immediate: true });
         
-        // Wait for next frame to ensure DOM is ready
+        // Safety delay to prevent "Double Click" issue
         gsap.set(data.next.container, { opacity: 0 });
         
         return gsap.fromTo(data.next.container, 
@@ -94,7 +104,6 @@ function initBarba() {
             duration: 0.6,
             ease: 'power2.out',
             onComplete: () => {
-              // Re-run everything once the new page is visible
               initPageSpecifics(data.next.namespace);
             }
           }
@@ -104,7 +113,6 @@ function initBarba() {
   });
 
   barba.hooks.after((data) => {
-    // Update navigation links active state
     const nextUrl = data.next.url.path;
     const linksWrap = document.querySelector('.nav-links');
     
@@ -118,7 +126,6 @@ function initBarba() {
       });
     }
     
-    // Refresh global UI elements
     initNavScramble(); 
     ScrollTrigger.refresh();
   });
@@ -128,21 +135,19 @@ function initBarba() {
    4. PAGE-SPECIFIC INITIALIZATION
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
-  // 1. Clear everything old
   ScrollTrigger.getAll().forEach(t => t.kill());
 
-  // 2. Cleanup SplitType leftovers
+  // Clean up text to prevent duplicates
   document.querySelectorAll('.line, .word, .char').forEach(el => {
     if (el.parentNode) el.outerHTML = el.textContent;
   });
 
-  // 3. Re-init animations and force refresh
   initAnimations();
   
-  // Extra delay to ensure layout is settled
+  // Final layout refresh
   setTimeout(() => {
     ScrollTrigger.refresh();
-  }, 100);
+  }, 150);
 
   if (namespace === 'portfolio') {
     setupUploader('drop-zone', 'file-input', 'gallery', 'dijoImages');
@@ -150,7 +155,7 @@ function initPageSpecifics(namespace) {
 }
 
 function initAnimations() {
-  // A. Headings: Mask Reveal + Color Wave
+  // A. Headings: Color Wave Ripple
   document.querySelectorAll('h1, h2').forEach(heading => {
     if (heading.closest('#site-loader')) return;
     
@@ -180,7 +185,7 @@ function initAnimations() {
     });
   });
 
-  // B. SplitType Mask Reveal for Paragraphs
+  // B. Paragraphs: Mask Reveal
   const textElements = document.querySelectorAll('section p:not(.stat-box p):not(.upload-zone p)');
   textElements.forEach(textEl => {
     gsap.set(textEl, { opacity: 1 });
@@ -192,9 +197,8 @@ function initAnimations() {
     });
   });
 
-  // C. General Element Reveals
+  // C. General Reveals
   gsap.utils.toArray('.reveal-up').forEach(el => {
-    // Skip if handled by text logic
     if (['p', 'h1', 'h2'].includes(el.tagName.toLowerCase())) return;
     
     gsap.fromTo(el, { opacity: 0, y: 48 }, {
@@ -207,69 +211,32 @@ function initAnimations() {
     });
   });
 
-  // D. Stats & Brands
   const statBoxes = gsap.utils.toArray('.stat-box');
   if (statBoxes.length) {
-    gsap.fromTo(statBoxes, 
-      { opacity: 0, y: 40, scale: 0.96 }, 
-      { 
-        opacity: 1, y: 0, scale: 1, 
-        duration: 0.8, 
-        ease: 'power3.out', 
-        stagger: 0.12, 
-        scrollTrigger: { trigger: '.stats', start: 'top 82%' } 
-      }
-    );
+    gsap.fromTo(statBoxes, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.12, scrollTrigger: { trigger: '.stats', start: 'top 82%' } });
   }
 
   const brandTags = gsap.utils.toArray('.brand-tag');
   if (brandTags.length) {
-    gsap.fromTo(brandTags, 
-      { opacity: 0, y: 20 }, 
-      { 
-        opacity: 1, y: 0, 
-        duration: 0.6, 
-        ease: 'power2.out', 
-        stagger: 0.07, 
-        scrollTrigger: { trigger: '.brands', start: 'top 88%' } 
-      }
-    );
+    gsap.fromTo(brandTags, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.07, scrollTrigger: { trigger: '.brands', start: 'top 88%' } });
   }
 
-  // E. Image parallax
   gsap.utils.toArray('section img:not(.logo-img)').forEach(img => {
-    gsap.to(img, { 
-      yPercent: -12, 
-      ease: 'none', 
-      scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 } 
-    });
+    gsap.to(img, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 } });
   });
 
-  // F. Marquee
   const marquee = document.querySelector('.marquee');
   if (marquee) {
     ScrollTrigger.create({
-      trigger: '.marquee-wrapper', 
-      start: 'top bottom', 
-      end: 'bottom top',
-      onUpdate: self => { 
-        marquee.style.animationDuration = Math.max(6, 20 - (Math.abs(self.getVelocity()) / 1000) * 2) + 's'; 
-      },
+      trigger: '.marquee-wrapper', start: 'top bottom', end: 'bottom top',
+      onUpdate: self => { marquee.style.animationDuration = Math.max(6, 20 - (Math.abs(self.getVelocity()) / 1000) * 2) + 's'; },
     });
   }
 
   animateCounters();
   const footer = document.querySelector('footer');
   if (footer) {
-    gsap.fromTo(footer, 
-      { opacity: 0 }, 
-      { 
-        opacity: 1, 
-        duration: 1.2, 
-        ease: 'power2.out', 
-        scrollTrigger: { trigger: footer, start: 'top 95%' } 
-      }
-    );
+    gsap.fromTo(footer, { opacity: 0 }, { opacity: 1, duration: 1.2, ease: 'power2.out', scrollTrigger: { trigger: footer, start: 'top 95%' } });
   }
 }
 
@@ -320,6 +287,7 @@ function initLoader(onComplete) {
         txt.textContent = 'Dijo Studios'; 
         switched = true; 
         clearInterval(iv);
+        // Brand name stays for 1.5 seconds
         setTimeout(dismissLoader, 1500);
       } else {
         txt.textContent = `${percent}%`;
@@ -350,7 +318,7 @@ function startScramble(el) {
   el.dataset.original = original;
   const letters = original.split('');
   if (!el.querySelector('span.letter')) {
-    el.innerHTML = letters.map(ch => ch === ' ' ? ' ' : `<span class="letter" data-char="${ch}">${ch}</span>`).join('');
+    el.innerHTML = letters.map(ch => ch === ' ' ? ' ' : `<span class=\"letter\" data-char=\"${ch}\">${ch}</span>`).join('');
   }
   const spans = el.querySelectorAll('span.letter');
   spans.forEach((span, i) => {
@@ -434,6 +402,6 @@ function addImageToGallery(src) {
   if (!gallery) return;
   const card = document.createElement('div');
   card.className = 'gallery-card';
-  card.innerHTML = `<img src="${src}" alt="Portfolio image" loading="lazy"/><div class="card-overlay"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></div><span class="card-label">View</span></div>`;
+  card.innerHTML = `<img src=\"${src}\" alt=\"Portfolio image\" loading=\"lazy\"/><div class=\"card-overlay\"><div class=\"card-icon\"><svg viewBox=\"0 0 24 24\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"/><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"/></svg></div><span class=\"card-label\">View</span></div>`;
   gallery.appendChild(card);
 }
