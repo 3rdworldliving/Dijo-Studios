@@ -421,23 +421,54 @@ function animateCounters() {
 }
 
 /* ═══════════════════════════════════════════════
-   6. NAV SCRAMBLE EFFECT
+   6. NAV INDICATOR & SCRAMBLE EFFECT
 ═══════════════════════════════════════════════ */
 function initNavIndicator() {
   const linksWrap = document.querySelector('.nav-links');
   if (!linksWrap) return;
 
+  let indicator = document.getElementById('navIndicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'navIndicator';
+    indicator.className = 'nav-indicator';
+    linksWrap.appendChild(indicator);
+  }
+
   if (window.innerWidth < 768) return; 
 
-  // Remove old listeners to avoid memory leaks on page transitions
+  const links = Array.from(linksWrap.querySelectorAll('a'));
+  const activeLink = linksWrap.querySelector('a.active') || links[0];
+
+  gsap.set(indicator, { opacity: 0, width: 0, x: 0, backgroundColor: '#D4AF37' });
+
+  function slideTo(el) {
+    const wrapRect = linksWrap.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    gsap.to(indicator, { x: elRect.left - wrapRect.left, width: elRect.width, opacity: 1, duration: 0.38, ease: 'power3.out' });
+  }
+
+  function snapToActive() {
+    const currActive = linksWrap.querySelector('a.active');
+    if (currActive) slideTo(currActive);
+    else gsap.to(indicator, { opacity: 0, duration: 0.25, ease: 'power2.out' });
+  }
+
   const newWrap = linksWrap.cloneNode(true);
   linksWrap.parentNode.replaceChild(newWrap, linksWrap);
   
+  newWrap.addEventListener('mouseenter', () => gsap.to(document.getElementById('navIndicator'), { opacity: 1, duration: 0.2 }));
+  
   // Attach mouseenter and mouseleave to start scramble and abort instantly
   newWrap.querySelectorAll('a').forEach(link => {
-    link.addEventListener('mouseenter', () => { startScramble(link); });
+    link.addEventListener('mouseenter', () => { slideTo(link); startScramble(link); });
     link.addEventListener('mouseleave', () => { stopScramble(link); });
   });
+
+  newWrap.addEventListener('mouseleave', snapToActive);
+  window.addEventListener('resize', () => { if (window.innerWidth < 768) gsap.set(document.getElementById('navIndicator'), { opacity: 0 }); else snapToActive(); });
+
+  setTimeout(snapToActive, 100); 
 }
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
