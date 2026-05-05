@@ -421,19 +421,24 @@ function animateCounters() {
 }
 
 /* ═══════════════════════════════════════════════
-   6. NAV INDICATOR & SCRAMBLE EFFECT
+   6. NAV SCRAMBLE EFFECT
 ═══════════════════════════════════════════════ */
 function initNavIndicator() {
   const linksWrap = document.querySelector('.nav-links');
   if (!linksWrap) return;
 
-  let indicator = document.getElementById('navIndicator');
-  if (!indicator) {
-    indicator = document.createElement('div');
-    indicator.id = 'navIndicator';
-    indicator.className = 'nav-indicator';
-    linksWrap.appendChild(indicator);
-  }
+  if (window.innerWidth < 768) return; 
+
+  // Remove old listeners to avoid memory leaks on page transitions
+  const newWrap = linksWrap.cloneNode(true);
+  linksWrap.parentNode.replaceChild(newWrap, linksWrap);
+  
+  // Attach mouseenter and mouseleave to start scramble and abort instantly
+  newWrap.querySelectorAll('a').forEach(link => {
+    link.addEventListener('mouseenter', () => { startScramble(link); });
+    link.addEventListener('mouseleave', () => { stopScramble(link); });
+  });
+}
 
   if (window.innerWidth < 768) return; 
 
