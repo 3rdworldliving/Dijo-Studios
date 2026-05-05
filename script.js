@@ -107,7 +107,7 @@ function initBarba() {
     }]
   });
 
-  // Update Navigation Active State automatically after entering a new page
+  // Update Navigation Active State and Re-run animations after entering a new page
   barba.hooks.after((data) => {
     const nextUrl = data.next.url.path;
     const linksWrap = document.querySelector('.nav-links');
@@ -119,6 +119,13 @@ function initBarba() {
         link.classList.add('active');
       }
     });
+    
+    // CRITICAL: Clear all old scroll triggers and refresh for the new content
+    ScrollTrigger.getAll().forEach(t => t.kill());
+    initPageSpecifics(data.next.namespace);
+    initNavScramble(); 
+    ScrollTrigger.refresh();
+  });
     
     // Re-bind hover events for scrambling on new page
     initNavScramble(); 
