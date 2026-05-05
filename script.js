@@ -90,12 +90,10 @@ function initAnimations() {
   document.querySelectorAll('h1, h2').forEach(heading => {
     if (heading.closest('#site-loader')) return;
 
-    const scrambler = new TextScramble(heading);
-
     ScrollTrigger.create({
       trigger: heading,
       start: 'top 88%',
-      onEnter: () => scrambler.reveal(),
+      onEnter: () => scrambleText(heading),
       once: true,
     });
   });
