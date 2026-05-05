@@ -30,13 +30,20 @@ document.addEventListener('DOMContentLoaded', () => {
     lastY = scroll;
   });
 
-  // Loader check on first load
-  const isHomePage = document.querySelector('[data-barba-namespace="home"]');
-  if (isHomePage) {
-    initLoader(() => initPageSpecifics('home'));
+  // Get the current page namespace
+  const nsElement = document.querySelector('[data-barba-namespace]');
+  const namespace = nsElement ? nsElement.dataset.barbaNamespace : 'other';
+
+  // Check if the loader has already played in this browser session
+  const hasPlayedLoader = sessionStorage.getItem('dijo_loader_played');
+
+  if (!hasPlayedLoader) {
+    // First time visiting OR logo was clicked
+    sessionStorage.setItem('dijo_loader_played', 'true');
+    initLoader(() => initPageSpecifics(namespace));
   } else {
-    const ns = document.querySelector('[data-barba-namespace]');
-    initPageSpecifics(ns ? ns.dataset.barbaNamespace : 'other');
+    // Already visited, skip loader
+    initPageSpecifics(namespace);
   }
 
   initBarba(); // Start page transition engine
@@ -57,6 +64,13 @@ function initGlobalEvents() {
       });
     });
   }
+
+  // When the logo is clicked, clear the session storage so the loader plays again
+  document.querySelectorAll('.logo-container').forEach(logo => {
+    logo.addEventListener('click', () => {
+      sessionStorage.removeItem('dijo_loader_played');
+    });
+  });
 }
 
 /* ═══════════════════════════════════════════════
@@ -64,6 +78,8 @@ function initGlobalEvents() {
 ═══════════════════════════════════════════════ */
 function initBarba() {
   barba.init({
+    // Tell Barba to ignore the logo link so it does a hard refresh
+    prevent: ({ el }) => el.closest('.logo-container') !== null,
     transitions: [{
       name: 'fade-transition',
       leave(data) {
@@ -421,7 +437,6 @@ function initNavIndicator() {
 
   if (window.innerWidth < 768) return; 
 
-  // Re-fetch links to ensure event listeners don't duplicate on Barba transition
   const links = Array.from(linksWrap.querySelectorAll('a'));
   const activeLink = linksWrap.querySelector('a.active') || links[0];
 
@@ -439,14 +454,15 @@ function initNavIndicator() {
     else gsap.to(indicator, { opacity: 0, duration: 0.25, ease: 'power2.out' });
   }
 
-  // Remove old listeners to avoid memory leaks on page transitions
   const newWrap = linksWrap.cloneNode(true);
   linksWrap.parentNode.replaceChild(newWrap, linksWrap);
   
   newWrap.addEventListener('mouseenter', () => gsap.to(document.getElementById('navIndicator'), { opacity: 1, duration: 0.2 }));
   
+  // Attach mouseenter and mouseleave to start scramble and abort instantly
   newWrap.querySelectorAll('a').forEach(link => {
-    link.addEventListener('mouseenter', () => { slideTo(link); scrambleText(link); });
+    link.addEventListener('mouseenter', () => { slideTo(link); startScramble(link); });
+    link.addEventListener('mouseleave', () => { stopScramble(link); });
   });
 
   newWrap.addEventListener('mouseleave', snapToActive);
@@ -456,10 +472,11 @@ function initNavIndicator() {
 }
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-function scrambleText(el) {
+
+// Runs slot machine effect, stopping automatically after a set amount of spins
+function startScramble(el) {
   const original = el.dataset.original || el.textContent.trim();
   el.dataset.original = original;
-  if (el._scrambling) return; el._scrambling = true;
 
   const letters = original.split('');
   if (!el.querySelector('span.letter')) {
@@ -468,17 +485,45 @@ function scrambleText(el) {
 
   const spans = el.querySelectorAll('span.letter');
   spans.forEach((span, i) => {
-    const targetChar = span.dataset.char; let frame = 0; const spins = 4 + i * 2;
-    if (span._interval) clearInterval(span._interval);
+    const targetChar = span.dataset.char; 
+    let frame = 0; 
+    const spins = 4 + i * 2; // Fixed number of spins based on letter position
 
-    setTimeout(() => {
+    // Clear previous runs
+    if (span._interval) clearInterval(span._interval);
+    if (span._timeout) clearTimeout(span._timeout);
+
+    span._timeout = setTimeout(() => {
       span._interval = setInterval(() => {
-        if (frame < spins) { span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]; span.style.color = '#D4AF37'; } 
-        else { clearInterval(span._interval); span._interval = null; span.textContent = targetChar; span.style.color = ''; span.style.opacity = '1';
-          if (i === spans.length - 1) el._scrambling = false;
+        if (frame < spins) { 
+          // Keep scrambling
+          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]; 
+          span.style.color = '#D4AF37'; 
+        } else { 
+          // Naturally settle on the correct letter and stop
+          clearInterval(span._interval); 
+          span._interval = null; 
+          span.textContent = targetChar; 
+          span.style.color = ''; 
         }
         frame++;
       }, 38);
-    }, i * 55);
+    }, i * 30);
+  });
+}
+
+// Aborts immediately and resets to original text when cursor leaves
+function stopScramble(el) {
+  const spans = el.querySelectorAll('span.letter');
+  
+  spans.forEach(span => {
+    if (span._timeout) clearTimeout(span._timeout);
+    if (span._interval) clearInterval(span._interval);
+    span._timeout = null;
+    span._interval = null;
+    
+    // Instantly reset to original character and color
+    span.textContent = span.dataset.char; 
+    span.style.color = ''; 
   });
 }
