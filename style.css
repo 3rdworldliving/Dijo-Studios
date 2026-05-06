@@ -37,6 +37,20 @@ font-family: var(--font-heading); font-size: 1.2rem; font-weight: 900;
 }
 .logo-img { height: 35px; width: auto; object-fit: contain; }
 .logo-text span { color: var(--highlight); }
+
+/* ── Pulsating gold effect for logo text on hover ── */
+.logo-text {
+  transition: color 0.2s ease;
+}
+.logo-container:hover .logo-text {
+  animation: goldPulse 0.8s infinite ease-in-out;
+}
+@keyframes goldPulse {
+  0% { color: var(--text); text-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+  50% { color: var(--highlight); text-shadow: 0 0 8px rgba(212, 175, 55, 0.6); }
+  100% { color: var(--text); text-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+}
+
 .nav-links { display: flex; gap: 0; position: relative; }
 .nav-links a {
 font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;
@@ -182,8 +196,8 @@ footer a { color: var(--highlight); margin: 0 0.5rem; }
 #site-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease, visibility 0.6s ease; }
 .loader-text { 
   font-family: var(--font-heading); font-weight: 900; color: var(--text); 
-  /* FIXED: Reduced size from 13.5rem to 11rem so "Dijo Studios" fits on one line */
-  font-size: clamp(3rem, 12vw, 11rem); 
+  /* FIXED: Reduced size from 13.5rem to 8rem so "Dijo Studios" fits on one line */
+  font-size: clamp(3rem, 12vw, 8rem); 
   line-height: 0.85; text-align: center; max-width: 85%; margin: 0 auto; word-break: break-word; 
 }
 #site-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
