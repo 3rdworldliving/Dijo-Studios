@@ -111,9 +111,29 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
 .clear-btn:hover { border-color: var(--highlight); color: var(--highlight); }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-.gallery-card { position: relative; overflow: hidden; border-radius: 2px; cursor: pointer; background: var(--surface); }
-.gallery-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; filter: grayscale(20%) brightness(0.92); transform: scale(1); transition: transform 0.6s cubic-bezier(0.25,1,0.5,1), filter 0.6s ease; }
-.gallery-card:hover img { transform: scale(1.07); filter: grayscale(0%) brightness(1); }
+.gallery-card { 
+  position: relative; 
+  overflow: hidden; 
+  border-radius: 2px; 
+  cursor: pointer; 
+  background: var(--surface);
+  --img-shift-x: 0px;
+  --img-shift-y: 0px;
+  will-change: transform;
+}
+.gallery-card img { 
+  width: 100%; 
+  aspect-ratio: 4/3; 
+  object-fit: cover; 
+  display: block; 
+  filter: grayscale(20%) brightness(0.92); 
+  transition: transform 0.4s ease, filter 0.6s ease;
+  transform: translate(var(--img-shift-x, 0px), var(--img-shift-y, 0px));
+}
+.gallery-card:hover img { 
+  transform: scale(1.07) translate(var(--img-shift-x, 0px), var(--img-shift-y, 0px)); 
+  filter: grayscale(0%) brightness(1); 
+}
 
 .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, transparent 100%); opacity: 0; transition: opacity 0.4s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; }
 .gallery-card:hover .card-overlay { opacity: 1; }
