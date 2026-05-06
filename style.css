@@ -4,7 +4,7 @@
 --surface: #141414;
 --text: #f5f5f5;
 --highlight: #d4af37;
---font-heading: 'Nunito', sans-serif;
+--font-heading: 'Bebas Neue', sans-serif;
 --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 --spacing: clamp(1rem, 5vw, 3rem);
 --container: min(90%, 1200px);
