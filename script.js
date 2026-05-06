@@ -1,407 +1,141 @@
-/* script.js — Dijo Studios | Fixed Barba.js Lifecycle & ScrollTrigger */
+/* style.css — Compiled for 2.5s Loader & Mobile Fixes */
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --text: #f5f5f5;
+  --highlight: #d4af37;
+  --font-heading: 'Nunito', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --spacing: clamp(1rem, 5vw, 3rem);
+  --container: min(90%, 1200px);
+}
 
-/* ═══════════════════════════════════════════════
-   1. LENIS SMOOTH SCROLL
-═══════════════════════════════════════════════ */
-const lenis = new Lenis({
-  duration: 1.25,
-  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  smooth: true,
-});
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-gsap.ticker.add(time => lenis.raf(time * 1000));
-gsap.ticker.lagSmoothing(0);
-gsap.registerPlugin(ScrollTrigger);
+html, body {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
 
-/* ═══════════════════════════════════════════════
-   2. GLOBAL INITIALIZATION
-═══════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
-  initGlobalEvents();
-  initNavScramble();
+a { color: inherit; text-decoration: none; transition: 0.3s ease; }
+img { max-width: 100%; display: block; }
+.container { width: var(--container); margin: 0 auto; padding: 0 var(--spacing); }
+
+/* ── Header & Navigation ── */
+header {
+  position: fixed; top: 0; left: 0; width: 100%;
+  background: rgba(10,10,10,0.9); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  z-index: 100; padding: 1rem 0;
+  transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+}
+
+nav { display: flex; justify-content: space-between; align-items: center; }
+
+.logo-container { 
+  display: flex; align-items: center; gap: 10px; 
+  font-family: var(--font-heading); font-size: 1.2rem; font-weight: 900;
+  cursor: pointer;
+}
+.logo-img { height: 35px; width: auto; object-fit: contain; }
+.logo-text span { color: var(--highlight); }
+
+.nav-links { display: flex; gap: 0.5rem; position: relative; }
+
+.nav-links a {
+  font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;
+  text-transform: uppercase; opacity: 0.65;
+  position: relative; display: inline-block;
+  padding: 0.4rem 1.2rem;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+.nav-links a:hover { opacity: 1; color: var(--highlight); }
+.nav-links a.active { opacity: 1; color: var(--text); }
+
+.nav-links a span.letter {
+  display: inline-block;
+  transition: color 0.08s ease;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Hamburger (mobile) ── */
+.hamburger {
+  display: none; flex-direction: column; gap: 5px;
+  cursor: pointer; background: none; border: none; padding: 4px;
+}
+.hamburger span {
+  display: block; width: 24px; height: 2px;
+  background: var(--text); transition: all 0.3s ease;
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+main { width: 100%; min-height: 100vh; }
+
+/* ── Typography & Mask Effect ── */
+section { padding: 8rem 0 4rem; min-height: 80vh; display: flex; flex-direction: column; justify-content: center; }
+h1, h2, h3, h4, h5, h6 { 
+  font-family: var(--font-heading); font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -0.02em;
+}
+h1 { font-size: clamp(2.5rem, 8vw, 5.5rem); }
+h2 { font-size: clamp(2rem, 6vw, 3.5rem); text-align: center; margin-bottom: 3rem; }
+.subtitle { color: #ccc; font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
+
+.line { overflow: hidden; display: block; }
+.word { display: inline-block; will-change: transform; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--text); color: var(--bg); padding: 1rem 2.5rem;
+  font-weight: 600; border-radius: 50px; transition: all 0.4s ease;
+  text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
+}
+.btn:hover { background: var(--highlight); transform: translateY(-2px); }
+
+/* ── Loading Screen ── */
+#site-loader {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg); z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.loader-text {
+  font-family: var(--font-heading); font-weight: 900; color: var(--text);
+  font-size: clamp(3rem, 12vw, 10rem); 
+  line-height: 1.1; 
+  letter-spacing: -0.01em; 
+  text-align: center; 
+  max-width: 90%; 
+  margin: 0 auto; 
+  word-break: break-word;
+}
+
+#site-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.6s ease; }
+
+.reveal-up { opacity: 0; }
+
+@media (max-width: 768px) {
+  section { min-height: auto; padding: 5rem 0 3rem; }
+  .hamburger { display: flex; }
+  .nav-links {
+    display: none; flex-direction: column;
+    position: fixed; top: 65px; left: 0; right: 0;
+    background: rgba(10,10,10,0.97); backdrop-filter: blur(10px);
+    padding: 1.5rem 2rem; gap: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
+  }
+  .nav-links.open { display: flex; }
   
-  const header = document.querySelector('header');
-  let lastY = 0;
-  lenis.on('scroll', ({ scroll }) => {
-    if (!header) return;
-    const scrollingDown = scroll > lastY && scroll > 80;
-    header.style.transform = scrollingDown ? 'translateY(-100%)' : 'translateY(0)';
-    lastY = scroll;
-  });
-
-  const nsElement = document.querySelector('[data-barba-namespace]');
-  const namespace = nsElement ? nsElement.dataset.barbaNamespace : 'other';
-  const hasPlayedLoader = sessionStorage.getItem('dijo_loader_played');
-
-  // Loader only appears on first load or if logo is clicked
-  if (!hasPlayedLoader) {
-    sessionStorage.setItem('dijo_loader_played', 'true');
-    initLoader(() => initPageSpecifics(namespace));
-  } else {
-    initPageSpecifics(namespace);
+  /* Mobile Loading Text Fix */
+  .loader-text {
+    line-height: 1.25; 
+    letter-spacing: 0.05em;
   }
-
-  initBarba(); 
-});
-
-function initGlobalEvents() {
-  const hamburger = document.getElementById('hamburger');
-  const navLinks  = document.querySelector('.nav-links');
-  if (hamburger && navLinks) {
-    hamburger.addEventListener('click', () => {
-      const isOpen = hamburger.classList.toggle('open');
-      navLinks.classList.toggle('open');
-
-      // Scramble all links when opening mobile menu
-      if (isOpen) {
-        navLinks.querySelectorAll('a').forEach(link => {
-          startScramble(link);
-        });
-      }
-    });
-    
-    navLinks.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        hamburger.classList.remove('open');
-        navLinks.classList.remove('open');
-      });
-    });
-  }
-
-  // Clear memory on logo click to replay loader
-  document.querySelectorAll('.logo-container').forEach(logo => {
-    logo.addEventListener('click', () => {
-      sessionStorage.removeItem('dijo_loader_played');
-    });
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   3. BARBA.JS PAGE TRANSITIONS
-═══════════════════════════════════════════════ */
-function initBarba() {
-  barba.init({
-    prevent: ({ el }) => el.closest('.logo-container') !== null,
-    transitions: [{
-      name: 'fade-transition',
-      leave(data) {
-        return gsap.to(data.current.container, {
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power2.inOut'
-        });
-      },
-      enter(data) {
-        lenis.scrollTo(0, { immediate: true });
-        
-        // Safety delay to prevent "Double Click" issue
-        gsap.set(data.next.container, { opacity: 0 });
-        
-        return gsap.fromTo(data.next.container, 
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration: 0.6,
-            ease: 'power2.out',
-            onComplete: () => {
-              initPageSpecifics(data.next.namespace);
-            }
-          }
-        );
-      }
-    }]
-  });
-
-  barba.hooks.after((data) => {
-    const nextUrl = data.next.url.path;
-    const linksWrap = document.querySelector('.nav-links');
-    
-    if (linksWrap) {
-      linksWrap.querySelectorAll('a').forEach(link => {
-        link.classList.remove('active');
-        const linkPath = new URL(link.href).pathname;
-        if (linkPath === nextUrl || (nextUrl === '/' && linkPath.includes('index.html'))) {
-          link.classList.add('active');
-        }
-      });
-    }
-    
-    initNavScramble(); 
-    ScrollTrigger.refresh();
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   4. PAGE-SPECIFIC INITIALIZATION
-═══════════════════════════════════════════════ */
-function initPageSpecifics(namespace) {
-  ScrollTrigger.getAll().forEach(t => t.kill());
-
-  // Clean up text to prevent duplicates
-  document.querySelectorAll('.line, .word, .char').forEach(el => {
-    if (el.parentNode) el.outerHTML = el.textContent;
-  });
-
-  initAnimations();
-  
-  // Final layout refresh
-  setTimeout(() => {
-    ScrollTrigger.refresh();
-  }, 150);
-
-  if (namespace === 'portfolio') {
-    setupUploader('drop-zone', 'file-input', 'gallery', 'dijoImages');
-  }
-}
-
-function initAnimations() {
-  // A. Headings: Color Wave Ripple
-  document.querySelectorAll('h1, h2').forEach(heading => {
-    if (heading.closest('#site-loader')) return;
-    
-    gsap.set(heading, { opacity: 1 });
-    const split = new SplitType(heading, { types: 'lines, words, chars' });
-    split.lines.forEach(line => gsap.set(line, { overflow: 'hidden' }));
-
-    ScrollTrigger.create({
-      trigger: heading,
-      start: 'top 90%',
-      once: true,
-      onEnter: () => {
-        gsap.from(split.words, {
-          yPercent: 100, 
-          duration: 0.85, 
-          ease: 'power3.out', 
-          stagger: 0.04
-        });
-
-        gsap.to(split.chars, {
-          color: '#D4AF37',
-          duration: 0.35,
-          stagger: { each: 0.03, yoyo: true, repeat: 1 },
-          delay: 0.2 
-        });
-      }
-    });
-  });
-
-  // B. Paragraphs: Mask Reveal
-  const textElements = document.querySelectorAll('section p:not(.stat-box p):not(.upload-zone p)');
-  textElements.forEach(textEl => {
-    gsap.set(textEl, { opacity: 1 });
-    const split = new SplitType(textEl, { types: 'lines, words' });
-    split.lines.forEach(line => gsap.set(line, { overflow: 'hidden' }));
-    gsap.from(split.words, {
-      yPercent: 100, duration: 0.85, ease: 'power3.out', stagger: 0.025,
-      scrollTrigger: { trigger: textEl, start: 'top 90%' }
-    });
-  });
-
-  // C. General Reveals
-  gsap.utils.toArray('.reveal-up').forEach(el => {
-    if (['p', 'h1', 'h2'].includes(el.tagName.toLowerCase())) return;
-    
-    gsap.fromTo(el, { opacity: 0, y: 48 }, {
-      opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-      scrollTrigger: { 
-        trigger: el, 
-        start: 'top 88%',
-        toggleActions: 'play none none none'
-      }
-    });
-  });
-
-  const statBoxes = gsap.utils.toArray('.stat-box');
-  if (statBoxes.length) {
-    gsap.fromTo(statBoxes, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.12, scrollTrigger: { trigger: '.stats', start: 'top 82%' } });
-  }
-
-  const brandTags = gsap.utils.toArray('.brand-tag');
-  if (brandTags.length) {
-    gsap.fromTo(brandTags, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.07, scrollTrigger: { trigger: '.brands', start: 'top 88%' } });
-  }
-
-  gsap.utils.toArray('section img:not(.logo-img)').forEach(img => {
-    gsap.to(img, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 } });
-  });
-
-  const marquee = document.querySelector('.marquee');
-  if (marquee) {
-    ScrollTrigger.create({
-      trigger: '.marquee-wrapper', start: 'top bottom', end: 'bottom top',
-      onUpdate: self => { marquee.style.animationDuration = Math.max(6, 20 - (Math.abs(self.getVelocity()) / 1000) * 2) + 's'; },
-    });
-  }
-
-  animateCounters();
-  const footer = document.querySelector('footer');
-  if (footer) {
-    gsap.fromTo(footer, { opacity: 0 }, { opacity: 1, duration: 1.2, ease: 'power2.out', scrollTrigger: { trigger: footer, start: 'top 95%' } });
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   5. UTILITY FUNCTIONS
-═══════════════════════════════════════════════ */
-function initLoader(onComplete) {
-  lenis.stop();
-  const loader = document.createElement('div');
-  loader.id = 'site-loader';
-  loader.innerHTML = '<span class="loader-text">0%</span>';
-  document.body.prepend(loader);
-  document.body.style.overflow = 'hidden';
-
-  let percent = 0;
-  const txt = loader.querySelector('.loader-text');
-  let switched = false;
-
-  const pulseAnim = gsap.to(txt, {
-    color: '#D4AF37',
-    textShadow: '0 0 25px rgba(212,175,55,0.4)',
-    duration: 0.65,
-    repeat: -1,
-    yoyo: true,
-    ease: 'power1.inOut'
-  });
-
-  const dismissLoader = () => {
-    if (!loader.parentNode || loader.classList.contains('hide')) return;
-    pulseAnim.kill();
-    gsap.to(loader, {
-      opacity: 0, duration: 0.6, ease: 'power2.inOut',
-      onComplete: () => {
-        loader.remove(); 
-        document.body.style.overflow = ''; 
-        lenis.start(); 
-        if (onComplete) onComplete();
-      }
-    });
-    loader.classList.add('hide');
-  };
-
-  const iv = setInterval(() => {
-    percent += Math.floor(Math.random() * 10) + 5;
-    if (!switched) {
-      if (percent >= 90) {
-        percent = 90; 
-        txt.textContent = 'Dijo Studios'; 
-        switched = true; 
-        clearInterval(iv);
-        // Brand name stays for 1.5 seconds
-        setTimeout(dismissLoader, 1500);
-      } else {
-        txt.textContent = `${percent}%`;
-      }
-    }
-  }, 80);
-
-  setTimeout(dismissLoader, 8000); 
-}
-
-function initNavScramble() {
-  const linksWrap = document.querySelector('.nav-links');
-  if (!linksWrap || window.innerWidth < 768) return;
-
-  const newWrap = linksWrap.cloneNode(true);
-  linksWrap.parentNode.replaceChild(newWrap, linksWrap);
-  
-  newWrap.querySelectorAll('a').forEach(link => {
-    link.addEventListener('mouseenter', () => { startScramble(link); });
-    link.addEventListener('mouseleave', () => { stopScramble(link); });
-  });
-}
-
-const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-
-function startScramble(el) {
-  const original = el.dataset.original || el.textContent.trim();
-  el.dataset.original = original;
-  const letters = original.split('');
-  if (!el.querySelector('span.letter')) {
-    el.innerHTML = letters.map(ch => ch === ' ' ? ' ' : `<span class=\"letter\" data-char=\"${ch}\">${ch}</span>`).join('');
-  }
-  const spans = el.querySelectorAll('span.letter');
-  spans.forEach((span, i) => {
-    const targetChar = span.dataset.char; 
-    let frame = 0; 
-    const spins = 4 + i * 2;
-    if (span._interval) clearInterval(span._interval);
-    if (span._timeout) clearTimeout(span._timeout);
-    span._timeout = setTimeout(() => {
-      span._interval = setInterval(() => {
-        if (frame < spins) { 
-          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]; 
-          span.style.color = '#D4AF37'; 
-        } else { 
-          clearInterval(span._interval); 
-          span.textContent = targetChar; 
-          span.style.color = ''; 
-        }
-        frame++;
-      }, 38);
-    }, i * 30);
-  });
-}
-
-function stopScramble(el) {
-  const spans = el.querySelectorAll('span.letter');
-  spans.forEach(span => {
-    if (span._timeout) clearTimeout(span._timeout);
-    if (span._interval) clearInterval(span._interval);
-    span.textContent = span.dataset.char; 
-    span.style.color = ''; 
-  });
-}
-
-function animateCounters() {
-  const yearsEl = document.getElementById('years-count');
-  const brandsEl = document.getElementById('brands-count');
-  if (!yearsEl || !brandsEl) return;
-  const obj = { years: 0, brands: 0 };
-  ScrollTrigger.create({
-    trigger: yearsEl.closest('.stats'), 
-    start: 'top 80%', 
-    once: true,
-    onEnter: () => {
-      gsap.to(obj, { 
-        years: 5, 
-        brands: 25, 
-        duration: 2, 
-        ease: 'power2.out',
-        onUpdate: () => { 
-          yearsEl.textContent = Math.floor(obj.years); 
-          brandsEl.textContent = Math.floor(obj.brands); 
-        }
-      });
-    }
-  });
-}
-
-function setupUploader(zoneId, inputId, galleryId, storageKey) {
-  const dropZone = document.getElementById(zoneId);
-  const fileInput = document.getElementById(inputId);
-  const gallery = document.getElementById(galleryId);
-  if (!dropZone || !gallery) return;
-
-  dropZone.addEventListener('click', () => fileInput && fileInput.click());
-  if (fileInput) fileInput.addEventListener('change', () => {
-    Array.from(fileInput.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => addImageToGallery(e.target.result);
-      reader.readAsDataURL(file);
-    });
-  });
-  
-  try { 
-    JSON.parse(localStorage.getItem(storageKey) || '[]').forEach(src => addImageToGallery(src)); 
-  } catch(e) {}
-}
-
-function addImageToGallery(src) {
-  const gallery = document.getElementById('gallery');
-  if (!gallery) return;
-  const card = document.createElement('div');
-  card.className = 'gallery-card';
-  card.innerHTML = `<img src=\"${src}\" alt=\"Portfolio image\" loading=\"lazy\"/><div class=\"card-overlay\"><div class=\"card-icon\"><svg viewBox=\"0 0 24 24\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/><line x1=\"11\" y1=\"8\" x2=\"11\" y2=\"14\"/><line x1=\"8\" y1=\"11\" x2=\"14\" y2=\"11\"/></svg></div><span class=\"card-label\">View</span></div>`;
-  gallery.appendChild(card);
 }
