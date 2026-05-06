@@ -1,5 +1,5 @@
 /* script.js — Dijo Studios | Fixed Barba.js Lifecycle & ScrollTrigger */
-/* Added: Floating Parallax + Mouse-Follow Effects */
+/* Added: Floating Parallax + Mouse-Follow Effects + Slower Cascading Loader Scramble */
 
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
@@ -411,9 +411,9 @@ function initLoader(onComplete) {
   // ── Slot machine scramble on each letter ──
   const TARGET   = 'DIJO STUDIOS'; // uppercase so random chars blend naturally
   const CHARS    = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-  const FRAME_MS = 38;   // speed of each random frame
-  const STAGGER  = 45;   // ms between each letter starting to settle
-  const SPINS    = 7;    // random frames before a letter lands (same for all — simultaneous feel)
+  const FRAME_MS = 80;   // slower frame updates (was 38)
+  const STAGGER  = 120;  // longer delay between each letter starting to settle (was 45)
+  const SPINS    = 12;   // more random frames before a letter lands (was 7)
 
   // Build one <span> per character so we can animate individually
   txt.innerHTML = TARGET.split('').map((ch, i) =>
