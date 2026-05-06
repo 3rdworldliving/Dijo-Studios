@@ -1,4 +1,5 @@
 /* script.js — Dijo Studios | Fixed Barba.js Lifecycle & ScrollTrigger */
+/* Added: Floating Parallax + Mouse-Follow Effects */
 
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
@@ -146,6 +147,7 @@ function initPageSpecifics(namespace) {
 
   if (namespace === 'portfolio') {
     setupUploader('drop-zone', 'file-input', 'gallery', 'dijoImages');
+    initPortfolioEffects(); // <-- activate floating & mouse effects
   }
 }
 
@@ -274,7 +276,115 @@ function initAnimations() {
 }
 
 /* ═══════════════════════════════════════════════
-   5. UTILITY FUNCTIONS
+   5. PORTFOLIO ENHANCEMENTS: FLOATING PARALLAX + MOUSE FOLLOW
+═══════════════════════════════════════════════ */
+function initPortfolioEffects() {
+  destroyFloatingParallax();
+  destroyMouseFollow();
+  
+  const cards = document.querySelectorAll('.gallery-card');
+  cards.forEach((card, idx) => {
+    applyFloatingParallaxToCard(card, idx);
+    applyMouseFollowToCard(card);
+  });
+}
+
+// Floating parallax: different vertical speed per image → overlapping effect
+function destroyFloatingParallax() {
+  document.querySelectorAll('.gallery-card').forEach(card => {
+    if (card._fpTrigger) {
+      card._fpTrigger.kill();
+      delete card._fpTrigger;
+    }
+    // reset inline transform if needed (scrollTrigger does cleanup, but just in case)
+    card.style.transform = '';
+  });
+}
+
+function applyFloatingParallaxToCard(card, index) {
+  if (card._fpTrigger) return;
+  
+  // create unique scroll range: -35px .. 45px based on index to produce overlap
+  const patterns = [40, -28, 52, -35, 22, -45, 30];
+  const rangeY = patterns[index % patterns.length];
+  
+  // Use scrub: true to smoothly map scroll progress between start/end triggers
+  const trigger = ScrollTrigger.create({
+    trigger: card,
+    start: 'top bottom',
+    end: 'bottom top',
+    scrub: 0.8,
+    onUpdate: (self) => {
+      const progress = self.progress; // 0 → 1
+      const yOffset = progress * rangeY;
+      // keep parity with previous transform while not interfering mouse-follow (different element)
+      card.style.transform = `translateY(${yOffset}px)`;
+    }
+  });
+  
+  card._fpTrigger = trigger;
+}
+
+// Mouse-follow effect: shift image inside card based on cursor position (3D-like)
+function destroyMouseFollow() {
+  document.querySelectorAll('.gallery-card').forEach(card => {
+    if (card._mouseMoveHandler) {
+      card.removeEventListener('mousemove', card._mouseMoveHandler);
+      card.removeEventListener('mouseleave', card._mouseLeaveHandler);
+      delete card._mouseMoveHandler;
+      delete card._mouseLeaveHandler;
+    }
+    // reset CSS vars
+    card.style.removeProperty('--img-shift-x');
+    card.style.removeProperty('--img-shift-y');
+  });
+}
+
+function applyMouseFollowToCard(card) {
+  if (card._mouseMoveHandler) return;
+  
+  const img = card.querySelector('img');
+  if (!img) return;
+  
+  const onMouseMove = (e) => {
+    const rect = card.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    // shift range: max ±8px horizontally, ±6px vertically
+    let shiftX = ((e.clientX - centerX) / (rect.width / 2)) * 8;
+    let shiftY = ((e.clientY - centerY) / (rect.height / 2)) * 6;
+    shiftX = Math.min(Math.max(shiftX, -8), 8);
+    shiftY = Math.min(Math.max(shiftY, -6), 6);
+    
+    card.style.setProperty('--img-shift-x', `${shiftX}px`);
+    card.style.setProperty('--img-shift-y', `${shiftY}px`);
+  };
+  
+  const onMouseLeave = () => {
+    card.style.setProperty('--img-shift-x', '0px');
+    card.style.setProperty('--img-shift-y', '0px');
+  };
+  
+  card.addEventListener('mousemove', onMouseMove);
+  card.addEventListener('mouseleave', onMouseLeave);
+  
+  card._mouseMoveHandler = onMouseMove;
+  card._mouseLeaveHandler = onMouseLeave;
+}
+
+// Helper to attach effects to newly added cards (dynamic uploads)
+function attachPortfolioEffectsToNewCard(card) {
+  if (!document.querySelector('[data-barba-namespace="portfolio"]')) return;
+  const allCards = Array.from(document.querySelectorAll('.gallery-card'));
+  const newIndex = allCards.indexOf(card);
+  if (newIndex !== -1 && !card._fpTrigger) {
+    applyFloatingParallaxToCard(card, newIndex);
+    applyMouseFollowToCard(card);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   6. UTILITY FUNCTIONS
 ═══════════════════════════════════════════════ */
 function initLoader(onComplete) {
   lenis.stop();
@@ -390,7 +500,7 @@ function initNavScramble() {
   });
 }
 
-const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
+const CHARS_SCRAMBLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
 
 function startScramble(el) {
   const original = el.dataset.original || el.textContent.trim();
@@ -409,7 +519,7 @@ function startScramble(el) {
     span._timeout = setTimeout(() => {
       span._interval = setInterval(() => {
         if (frame < spins) { 
-          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]; 
+          span.textContent = CHARS_SCRAMBLE[Math.floor(Math.random() * CHARS_SCRAMBLE.length)]; 
           span.style.color = '#D4AF37'; 
         } else { 
           clearInterval(span._interval); 
@@ -483,4 +593,8 @@ function addImageToGallery(src) {
   card.className = 'gallery-card';
   card.innerHTML = `<img src="${src}" alt="Portfolio image" loading="lazy"/><div class="card-overlay"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></div><span class="card-label">View</span></div>`;
   gallery.appendChild(card);
+  
+  // attach new effects (only if portfolio page is active)
+  attachPortfolioEffectsToNewCard(card);
+  ScrollTrigger.refresh();
 }
