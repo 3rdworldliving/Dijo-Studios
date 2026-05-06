@@ -1,141 +1,276 @@
-/* style.css — Compiled for 2.5s Loader & Mobile Fixes */
-:root {
-  --bg: #0a0a0a;
-  --surface: #141414;
-  --text: #f5f5f5;
-  --highlight: #d4af37;
-  --font-heading: 'Nunito', sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --spacing: clamp(1rem, 5vw, 3rem);
-  --container: min(90%, 1200px);
-}
+/* script.js — Dijo Studios | Final Stability, One-Row Loader & Hold Logic */
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* ═══════════════════════════════════════════════
+   1. LENIS SMOOTH SCROLL
+═══════════════════════════════════════════════ */
+const lenis = new Lenis({
+  duration: 1.25,
+  easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smooth: true,
+});
 
-html, body {
-  width: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-weight: 400;
-  line-height: 1.6;
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-}
+gsap.ticker.add(time => lenis.raf(time * 1000));
+gsap.ticker.lagSmoothing(0);
+gsap.registerPlugin(ScrollTrigger);
 
-a { color: inherit; text-decoration: none; transition: 0.3s ease; }
-img { max-width: 100%; display: block; }
-.container { width: var(--container); margin: 0 auto; padding: 0 var(--spacing); }
-
-/* ── Header & Navigation ── */
-header {
-  position: fixed; top: 0; left: 0; width: 100%;
-  background: rgba(10,10,10,0.9); backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  z-index: 100; padding: 1rem 0;
-  transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
-}
-
-nav { display: flex; justify-content: space-between; align-items: center; }
-
-.logo-container { 
-  display: flex; align-items: center; gap: 10px; 
-  font-family: var(--font-heading); font-size: 1.2rem; font-weight: 900;
-  cursor: pointer;
-}
-.logo-img { height: 35px; width: auto; object-fit: contain; }
-.logo-text span { color: var(--highlight); }
-
-.nav-links { display: flex; gap: 0.5rem; position: relative; }
-
-.nav-links a {
-  font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em;
-  text-transform: uppercase; opacity: 0.65;
-  position: relative; display: inline-block;
-  padding: 0.4rem 1.2rem;
-  transition: opacity 0.3s ease, color 0.3s ease;
-}
-.nav-links a:hover { opacity: 1; color: var(--highlight); }
-.nav-links a.active { opacity: 1; color: var(--text); }
-
-.nav-links a span.letter {
-  display: inline-block;
-  transition: color 0.08s ease;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── Hamburger (mobile) ── */
-.hamburger {
-  display: none; flex-direction: column; gap: 5px;
-  cursor: pointer; background: none; border: none; padding: 4px;
-}
-.hamburger span {
-  display: block; width: 24px; height: 2px;
-  background: var(--text); transition: all 0.3s ease;
-}
-.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
-.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-main { width: 100%; min-height: 100vh; }
-
-/* ── Typography & Mask Effect ── */
-section { padding: 8rem 0 4rem; min-height: 80vh; display: flex; flex-direction: column; justify-content: center; }
-h1, h2, h3, h4, h5, h6 { 
-  font-family: var(--font-heading); font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -0.02em;
-}
-h1 { font-size: clamp(2.5rem, 8vw, 5.5rem); }
-h2 { font-size: clamp(2rem, 6vw, 3.5rem); text-align: center; margin-bottom: 3rem; }
-.subtitle { color: #ccc; font-size: 1.1rem; max-width: 600px; margin-bottom: 2rem; }
-
-.line { overflow: hidden; display: block; }
-.word { display: inline-block; will-change: transform; }
-
-.btn {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  background: var(--text); color: var(--bg); padding: 1rem 2.5rem;
-  font-weight: 600; border-radius: 50px; transition: all 0.4s ease;
-  text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
-}
-.btn:hover { background: var(--highlight); transform: translateY(-2px); }
-
-/* ── Loading Screen ── */
-#site-loader {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: var(--bg); z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.loader-text {
-  font-family: var(--font-heading); font-weight: 900; color: var(--text);
-  font-size: clamp(3rem, 12vw, 10rem); 
-  line-height: 1.1; 
-  letter-spacing: -0.01em; 
-  text-align: center; 
-  max-width: 90%; 
-  margin: 0 auto; 
-  word-break: break-word;
-}
-
-#site-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.6s ease; }
-
-.reveal-up { opacity: 0; }
-
-@media (max-width: 768px) {
-  section { min-height: auto; padding: 5rem 0 3rem; }
-  .hamburger { display: flex; }
-  .nav-links {
-    display: none; flex-direction: column;
-    position: fixed; top: 65px; left: 0; right: 0;
-    background: rgba(10,10,10,0.97); backdrop-filter: blur(10px);
-    padding: 1.5rem 2rem; gap: 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
-  }
-  .nav-links.open { display: flex; }
+/* ═══════════════════════════════════════════════
+   2. GLOBAL INITIALIZATION
+═══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initGlobalEvents();
+  initNavScramble();
   
-  /* Mobile Loading Text Fix */
-  .loader-text {
-    line-height: 1.25; 
-    letter-spacing: 0.05em;
+  const header = document.querySelector('header');
+  let lastY = 0;
+  lenis.on('scroll', ({ scroll }) => {
+    if (!header) return;
+    const scrollingDown = scroll > lastY && scroll > 80;
+    header.style.transform = scrollingDown ? 'translateY(-100%)' : 'translateY(0)';
+    lastY = scroll;
+  });
+
+  const nsElement = document.querySelector('[data-barba-namespace]');
+  const namespace = nsElement ? nsElement.dataset.barbaNamespace : 'other';
+  const hasPlayedLoader = sessionStorage.getItem('dijo_loader_played');
+
+  if (!hasPlayedLoader) {
+    sessionStorage.setItem('dijo_loader_played', 'true');
+    initLoader(() => initPageSpecifics(namespace));
+  } else {
+    initPageSpecifics(namespace);
   }
+
+  initBarba(); 
+});
+
+function initGlobalEvents() {
+  const hamburger = document.getElementById('hamburger');
+  const navLinks  = document.querySelector('.nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      const isOpen = hamburger.classList.toggle('open');
+      navLinks.classList.toggle('open');
+      if (isOpen) {
+        navLinks.querySelectorAll('a').forEach(link => startScramble(link));
+      }
+    });
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        navLinks.classList.remove('open');
+      });
+    });
+  }
+  document.querySelectorAll('.logo-container').forEach(logo => {
+    logo.addEventListener('click', () => sessionStorage.removeItem('dijo_loader_played'));
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   3. BARBA.JS PAGE TRANSITIONS
+═══════════════════════════════════════════════ */
+function initBarba() {
+  barba.init({
+    prevent: ({ el }) => el.closest('.logo-container') !== null,
+    transitions: [{
+      name: 'fade-transition',
+      leave(data) { return gsap.to(data.current.container, { opacity: 0, duration: 0.4 }); },
+      enter(data) {
+        lenis.scrollTo(0, { immediate: true });
+        return gsap.fromTo(data.next.container, { opacity: 0 }, {
+          opacity: 1, 
+          duration: 0.6, 
+          onComplete: () => {
+            initPageSpecifics(data.next.namespace);
+          }
+        });
+      }
+    }]
+  });
+
+  barba.hooks.after((data) => {
+    const nextUrl = data.next.url.path;
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.classList.remove('active');
+      const linkPath = new URL(link.href).pathname;
+      if (linkPath === nextUrl || (nextUrl === '/' && linkPath.includes('index.html'))) link.classList.add('active');
+    });
+    initNavScramble(); 
+    ScrollTrigger.refresh();
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   4. PAGE-SPECIFIC INITIALIZATION
+═══════════════════════════════════════════════ */
+function initPageSpecifics(namespace) {
+  ScrollTrigger.getAll().forEach(t => t.kill());
+  document.querySelectorAll('.line, .word, .char').forEach(el => { if (el.parentNode) el.outerHTML = el.textContent; });
+  initAnimations();
+  setTimeout(() => { ScrollTrigger.refresh(); }, 200);
+
+  if (namespace === 'portfolio') {
+    setupUploader('drop-zone', 'file-input', 'gallery', 'dijoImages');
+  }
+}
+
+function initAnimations() {
+  gsap.set('.reveal-up, h1, h2, section p', { opacity: 1 });
+
+  document.querySelectorAll('h1, h2').forEach(heading => {
+    if (heading.closest('#site-loader')) return;
+    const split = new SplitType(heading, { types: 'lines, words, chars' });
+    split.lines.forEach(line => gsap.set(line, { overflow: 'hidden' }));
+
+    ScrollTrigger.create({
+      trigger: heading, start: 'top 90%', once: true,
+      onEnter: () => {
+        gsap.from(split.words, { yPercent: 100, duration: 0.85, ease: 'power3.out', stagger: 0.04 });
+        gsap.to(split.chars, { color: '#D4AF37', duration: 0.35, stagger: { each: 0.03, yoyo: true, repeat: 1 }, delay: 0.2 });
+      }
+    });
+  });
+
+  document.querySelectorAll('section p:not(.stat-box p)').forEach(textEl => {
+    const split = new SplitType(textEl, { types: 'lines, words' });
+    split.lines.forEach(line => gsap.set(line, { overflow: 'hidden' }));
+    gsap.from(split.words, { yPercent: 100, duration: 0.85, ease: 'power3.out', stagger: 0.025, scrollTrigger: { trigger: textEl, start: 'top 90%' } });
+  });
+
+  gsap.utils.toArray('.reveal-up').forEach(el => {
+    if (['p', 'h1', 'h2'].includes(el.tagName.toLowerCase())) return;
+    gsap.fromTo(el, { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%' } });
+  });
+
+  animateCounters();
+}
+
+/* ═══════════════════════════════════════════════
+   5. UTILITY FUNCTIONS (One-Row Loader + Hold)
+═══════════════════════════════════════════════ */
+function initLoader(onComplete) {
+  lenis.stop();
+
+  const loader = document.createElement('div');
+  loader.id = 'site-loader';
+  loader.innerHTML = '<span class="loader-text" id="loader-text">DIJO STUDIOS</span>';
+  document.body.prepend(loader);
+  document.body.style.overflow = 'hidden';
+
+  const txt = document.getElementById('loader-text');
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
+
+  const pulseAnim = gsap.to(txt, {
+    color: '#D4AF37',
+    textShadow: '0 0 35px rgba(212,175,55,0.5)',
+    duration: 0.7,
+    repeat: -1,
+    yoyo: true,
+    ease: 'power1.inOut',
+  });
+
+  // Prepare letters for slot machine
+  const TARGET = 'DIJO STUDIOS';
+  txt.innerHTML = TARGET.split('').map((ch) =>
+    ch === ' '
+      ? '<span class="lch" style="display:inline-block;width:0.3em">&nbsp;</span>'
+      : `<span class="lch" data-final="${ch}">${ch}</span>`
+  ).join('');
+
+  const letterSpans = txt.querySelectorAll('span.lch[data-final]');
+  let lettersLanded = 0;
+
+  gsap.from(txt, { opacity: 0, y: 10, duration: 0.6, ease: 'power2.out' });
+
+  letterSpans.forEach((span, i) => {
+    const finalChar = span.dataset.final;
+    let frame = 0;
+    const spins = 8; 
+
+    setTimeout(() => {
+      const iv = setInterval(() => {
+        if (frame < spins) {
+          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
+        } else {
+          clearInterval(iv);
+          span.textContent = finalChar;
+          lettersLanded++;
+
+          // After scramble settles, wait 1.5s then trigger cinematic exit
+          if (lettersLanded === letterSpans.length) {
+            setTimeout(() => {
+              pulseAnim.kill();
+              gsap.to(loader, {
+                opacity: 0,
+                scale: 1.05, 
+                duration: 0.8,
+                ease: 'power2.inOut',
+                onComplete: () => {
+                  loader.remove();
+                  document.body.style.overflow = '';
+                  lenis.start();
+                  if (onComplete) onComplete();
+                }
+              });
+              loader.classList.add('hide');
+            }, 1500); 
+          }
+        }
+        frame++;
+      }, 35);
+    }, i * 40); 
+  });
+}
+
+function initNavScramble() {
+  const linksWrap = document.querySelector('.nav-links');
+  if (!linksWrap || window.innerWidth < 768) return;
+  const newWrap = linksWrap.cloneNode(true);
+  linksWrap.parentNode.replaceChild(newWrap, linksWrap);
+  newWrap.querySelectorAll('a').forEach(link => {
+    link.addEventListener('mouseenter', () => startScramble(link));
+    link.addEventListener('mouseleave', () => stopScramble(link));
+  });
+}
+
+function startScramble(el) {
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
+  const original = el.dataset.original || el.textContent.trim();
+  el.dataset.original = original;
+  if (!el.querySelector('span.letter')) el.innerHTML = original.split('').map(ch => ch === ' ' ? ' ' : `<span class="letter" data-char="${ch}">${ch}</span>`).join('');
+  el.querySelectorAll('span.letter').forEach((span, i) => {
+    const targetChar = span.dataset.char;
+    let frame = 0, spins = 4 + i * 2;
+    if (span._interval) clearInterval(span._interval);
+    span._interval = setInterval(() => {
+      if (frame < spins) span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
+      else { clearInterval(span._interval); span.textContent = targetChar; }
+      frame++;
+    }, 38);
+  });
+}
+
+function stopScramble(el) {
+  el.querySelectorAll('span.letter').forEach(span => {
+    if (span._interval) clearInterval(span._interval);
+    span.textContent = span.dataset.char;
+  });
+}
+
+function animateCounters() {
+  const yearsEl = document.getElementById('years-count');
+  const brandsEl = document.getElementById('brands-count');
+  if (!yearsEl || !brandsEl) return;
+  const obj = { years: 0, brands: 0 };
+  ScrollTrigger.create({
+    trigger: yearsEl.closest('.stats'), start: 'top 80%', once: true,
+    onEnter: () => gsap.to(obj, { years: 5, brands: 25, duration: 2, onUpdate: () => { yearsEl.textContent = Math.floor(obj.years); brandsEl.textContent = Math.floor(obj.brands); } })
+  });
+}
+
+function setupUploader(zoneId, inputId, galleryId, storageKey) {
+  const dropZone = document.getElementById(zoneId);
+  if (!dropZone) return;
+  const fileInput = document.getElementById(inputId);
+  dropZone.addEventListener('click', () => fileInput && fileInput.click());
 }
