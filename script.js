@@ -209,53 +209,12 @@ function initAnimations() {
     });
   });
 
-  // F. Auto‑scrolling marquee (infinite, seamless, no CSS conflict)
-  const marqueeWrapper = document.querySelector('.marquee-wrapper');
+  // F. Marquee — handled entirely by CSS animation (autonomous, never resets)
+  // Clear any inline transform GSAP may have previously set so CSS animation runs cleanly
   const marquee = document.querySelector('.marquee');
-  if (marqueeWrapper && marquee) {
-    // Kill any existing animation to prevent conflicts
-    if (marquee._marqueeAnim) marquee._marqueeAnim.kill();
-    
-    // Make sure content is doubled for seamless loop (your HTML already has duplicate spans)
-    // We'll check if already doubled – if not, duplicate it
-    const children = marquee.children.length;
-    // Simple check: if there are fewer than 10 items, duplicate once
-    if (children < 10) {
-      const original = marquee.innerHTML;
-      marquee.innerHTML = original + original;
-    }
-    
-    // Small delay to let the browser calculate widths
-    setTimeout(() => {
-      const totalWidth = marquee.scrollWidth;
-      const halfWidth = totalWidth / 2;
-      if (halfWidth <= 0) return;
-      
-      // Create the infinite loop animation
-      marquee._marqueeAnim = gsap.fromTo(marquee,
-        { x: 0 },
-        {
-          x: -halfWidth,
-          duration: 20,
-          ease: "none",
-          repeat: -1,
-          modifiers: {
-            x: (x) => parseFloat(x) % halfWidth
-          }
-        }
-      );
-    }, 50);
-    
-    // Pause animation when tab is hidden (saves resources)
-    const handleVisibility = () => {
-      if (document.hidden) {
-        marquee._marqueeAnim?.pause();
-      } else {
-        marquee._marqueeAnim?.resume();
-      }
-    };
-    document.removeEventListener('visibilitychange', handleVisibility);
-    document.addEventListener('visibilitychange', handleVisibility);
+  if (marquee) {
+    if (marquee._marqueeAnim) { marquee._marqueeAnim.kill(); marquee._marqueeAnim = null; }
+    gsap.set(marquee, { clearProps: 'x,transform' });
   }
 
   animateCounters();
