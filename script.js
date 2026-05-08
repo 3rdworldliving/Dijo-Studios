@@ -1,6 +1,4 @@
-/* script.js — Dijo Studios | Fixed Barba.js Lifecycle & ScrollTrigger */
-/* Added: Auto-scrolling marquee (infinite, seamless) + floating parallax + mouse follow */
-
+/* script.js — Dijo Studios | Custom cursor + Barba + marquee + parallax */
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
 ═══════════════════════════════════════════════ */
@@ -15,12 +13,67 @@ gsap.ticker.lagSmoothing(0);
 gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════
-   2. GLOBAL INITIALIZATION
+   2. CUSTOM CURSOR (dot + ring with lerp)
+═══════════════════════════════════════════════ */
+let mouseX = 0, mouseY = 0;
+let dotX = 0, dotY = 0;
+let ringX = 0, ringY = 0;
+let cursorDot, cursorRing;
+
+function initCustomCursor() {
+  const oldDot = document.querySelector('.cursor-dot');
+  const oldRing = document.querySelector('.cursor-ring');
+  if (oldDot) oldDot.remove();
+  if (oldRing) oldRing.remove();
+
+  cursorDot = document.createElement('div');
+  cursorDot.className = 'cursor-dot';
+  cursorRing = document.createElement('div');
+  cursorRing.className = 'cursor-ring';
+  document.body.appendChild(cursorDot);
+  document.body.appendChild(cursorRing);
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function animateCursor() {
+    dotX += (mouseX - dotX) * 0.25;
+    dotY += (mouseY - dotY) * 0.25;
+    ringX += (mouseX - ringX) * 0.1;
+    ringY += (mouseY - ringY) * 0.1;
+    if (cursorDot) cursorDot.style.transform = `translate(${dotX}px, ${dotY}px)`;
+    if (cursorRing) cursorRing.style.transform = `translate(${ringX}px, ${ringY}px)`;
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  attachCursorHoverEvents();
+}
+
+function attachCursorHoverEvents() {
+  const interactive = document.querySelectorAll('a, button, .btn, .gallery-card, .brand-tag, .logo-container, .upload-zone, .clear-btn, [role="button"], input, textarea');
+  interactive.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      if (cursorDot) cursorDot.classList.add('hovered');
+      if (cursorRing) cursorRing.classList.add('hovered');
+    });
+    el.addEventListener('mouseleave', () => {
+      if (cursorDot) cursorDot.classList.remove('hovered');
+      if (cursorRing) cursorRing.classList.remove('hovered');
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   3. GLOBAL INITIALIZATION
 ═══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initGlobalEvents();
   initNavScramble();
-  
+  initCustomCursor();
+
   const header = document.querySelector('header');
   let lastY = 0;
   lenis.on('scroll', ({ scroll }) => {
@@ -41,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPageSpecifics(namespace);
   }
 
-  initBarba(); 
+  initBarba();
 });
 
 function initGlobalEvents() {
@@ -68,7 +121,7 @@ function initGlobalEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   3. BARBA.JS PAGE TRANSITIONS
+   4. BARBA.JS PAGE TRANSITIONS
 ═══════════════════════════════════════════════ */
 function initBarba() {
   barba.init({
@@ -85,7 +138,7 @@ function initBarba() {
       enter(data) {
         lenis.scrollTo(0, { immediate: true });
         gsap.set(data.next.container, { opacity: 0 });
-        return gsap.fromTo(data.next.container, 
+        return gsap.fromTo(data.next.container,
           { opacity: 0 },
           {
             opacity: 1,
@@ -112,13 +165,19 @@ function initBarba() {
         }
       });
     }
-    initNavScramble(); 
+    initNavScramble();
+    // Refresh cursor elements and hover events after page change
+    const oldDot = document.querySelector('.cursor-dot');
+    const oldRing = document.querySelector('.cursor-ring');
+    if (oldDot) oldDot.remove();
+    if (oldRing) oldRing.remove();
+    initCustomCursor();
     ScrollTrigger.refresh();
   });
 }
 
 /* ═══════════════════════════════════════════════
-   4. PAGE-SPECIFIC INITIALIZATION
+   5. PAGE-SPECIFIC INITIALIZATION
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
   ScrollTrigger.getAll().forEach(t => t.kill());
@@ -182,9 +241,9 @@ function initAnimations() {
   // D. Stats & Brands
   const statBoxes = gsap.utils.toArray('.stat-box');
   if (statBoxes.length) {
-    gsap.fromTo(statBoxes, 
-      { opacity: 0, y: 40, scale: 0.96 }, 
-      { 
+    gsap.fromTo(statBoxes,
+      { opacity: 0, y: 40, scale: 0.96 },
+      {
         opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.12,
         scrollTrigger: { trigger: '.stats', start: 'top 82%' }
       }
@@ -192,9 +251,9 @@ function initAnimations() {
   }
   const brandTags = gsap.utils.toArray('.brand-tag');
   if (brandTags.length) {
-    gsap.fromTo(brandTags, 
-      { opacity: 0, y: 20 }, 
-      { 
+    gsap.fromTo(brandTags,
+      { opacity: 0, y: 20 },
+      {
         opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.07,
         scrollTrigger: { trigger: '.brands', start: 'top 88%' }
       }
@@ -203,26 +262,25 @@ function initAnimations() {
 
   // E. Image parallax
   gsap.utils.toArray('section img:not(.logo-img)').forEach(img => {
-    gsap.to(img, { 
+    gsap.to(img, {
       yPercent: -12, ease: 'none',
       scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 }
     });
   });
 
-  // F. Marquee — handled entirely by CSS animation (autonomous, never resets)
-  // Clear any inline transform GSAP may have previously set so CSS animation runs cleanly
+  // F. Marquee — pure CSS (already defined in style.css)
   const marquee = document.querySelector('.marquee');
-  if (marquee) {
-    if (marquee._marqueeAnim) { marquee._marqueeAnim.kill(); marquee._marqueeAnim = null; }
-    gsap.set(marquee, { clearProps: 'x,transform' });
+  if (marquee && marquee._marqueeAnim) {
+    marquee._marqueeAnim.kill();
+    marquee._marqueeAnim = null;
   }
 
   animateCounters();
   const footer = document.querySelector('footer');
   if (footer) {
-    gsap.fromTo(footer, 
-      { opacity: 0 }, 
-      { 
+    gsap.fromTo(footer,
+      { opacity: 0 },
+      {
         opacity: 1, duration: 1.2, ease: 'power2.out',
         scrollTrigger: { trigger: footer, start: 'top 95%' }
       }
@@ -231,7 +289,7 @@ function initAnimations() {
 }
 
 /* ═══════════════════════════════════════════════
-   5. PORTFOLIO ENHANCEMENTS (floating parallax + mouse follow)
+   6. PORTFOLIO ENHANCEMENTS (floating parallax + mouse follow)
 ═══════════════════════════════════════════════ */
 function initPortfolioEffects() {
   destroyFloatingParallax();
@@ -319,7 +377,7 @@ function attachPortfolioEffectsToNewCard(card) {
 }
 
 /* ═══════════════════════════════════════════════
-   6. UTILITY FUNCTIONS
+   7. UTILITY FUNCTIONS (loader, scramble, counters, uploader)
 ═══════════════════════════════════════════════ */
 function initLoader(onComplete) {
   lenis.stop();
