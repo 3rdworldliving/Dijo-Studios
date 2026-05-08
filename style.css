@@ -16,7 +16,14 @@ html, body {
 width: 100%; background: var(--bg); color: var(--text);
 font-family: var(--font-body); font-weight: 400; line-height: 1.6;
 overflow-x: hidden; scroll-behavior: smooth;
-cursor: none; /* completely hide default cursor */
+}
+
+/* Force hide default cursor everywhere */
+html, body, *,
+a, button, .btn, input, textarea, select, .gallery-card,
+.nav-links a, .logo-container, .brand-tag, .upload-zone,
+.clear-btn, [role="button"], .marquee, .hero-cta {
+  cursor: none !important;
 }
 
 a { color: inherit; text-decoration: none; transition: 0.3s ease; }
