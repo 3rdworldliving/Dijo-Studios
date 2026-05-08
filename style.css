@@ -107,10 +107,12 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
   text-align: center;
   margin-top: 1.5rem; }
 
-/* ── Marquee (CSS animation removed – controlled by GSAP in script.js) ── */
+/* ── Marquee (pure CSS — runs autonomously, never tied to scroll) ── */
 .marquee-wrapper { overflow: hidden; padding: 2rem 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); }
-.marquee { display: flex; gap: 2rem; white-space: nowrap; will-change: transform; }
-.marquee span { font-size: 1.2rem; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; }
+.marquee { display: flex; gap: 2rem; white-space: nowrap; will-change: transform; animation: marquee-scroll 25s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+.marquee span { font-size: 1.2rem; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; flex-shrink: 0; padding-right: 2rem; }
+@keyframes marquee-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
 /* ── Stats & Brands ── */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2rem; margin: 3rem 0; }
