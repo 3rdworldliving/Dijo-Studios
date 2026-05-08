@@ -1,4 +1,4 @@
-/* script.js — Dijo Studios | Custom cursor + Barba + marquee + parallax */
+/* script.js — Dijo Studios | Single‑dot cursor with hover ripple + Barba + marquee + parallax */
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
 ═══════════════════════════════════════════════ */
@@ -13,25 +13,19 @@ gsap.ticker.lagSmoothing(0);
 gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════
-   2. CUSTOM CURSOR (dot + ring with lerp)
+   2. CUSTOM CURSOR (single dot, ripples on hover)
 ═══════════════════════════════════════════════ */
 let mouseX = 0, mouseY = 0;
 let dotX = 0, dotY = 0;
-let ringX = 0, ringY = 0;
-let cursorDot, cursorRing;
+let cursorDot;
 
 function initCustomCursor() {
   const oldDot = document.querySelector('.cursor-dot');
-  const oldRing = document.querySelector('.cursor-ring');
   if (oldDot) oldDot.remove();
-  if (oldRing) oldRing.remove();
 
   cursorDot = document.createElement('div');
   cursorDot.className = 'cursor-dot';
-  cursorRing = document.createElement('div');
-  cursorRing.className = 'cursor-ring';
   document.body.appendChild(cursorDot);
-  document.body.appendChild(cursorRing);
 
   document.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
@@ -41,10 +35,7 @@ function initCustomCursor() {
   function animateCursor() {
     dotX += (mouseX - dotX) * 0.25;
     dotY += (mouseY - dotY) * 0.25;
-    ringX += (mouseX - ringX) * 0.1;
-    ringY += (mouseY - ringY) * 0.1;
-    if (cursorDot) cursorDot.style.transform = `translate(${dotX}px, ${dotY}px)`;
-    if (cursorRing) cursorRing.style.transform = `translate(${ringX}px, ${ringY}px)`;
+    cursorDot.style.transform = `translate(${dotX}px, ${dotY}px) scale(1)`;
     requestAnimationFrame(animateCursor);
   }
   animateCursor();
@@ -53,15 +44,13 @@ function initCustomCursor() {
 }
 
 function attachCursorHoverEvents() {
-  const interactive = document.querySelectorAll('a, button, .btn, .gallery-card, .brand-tag, .logo-container, .upload-zone, .clear-btn, [role="button"], input, textarea');
+  const interactive = document.querySelectorAll('a, button, .btn, .gallery-card, .brand-tag, .logo-container, .upload-zone, .clear-btn, [role="button"], input, textarea, .nav-links a');
   interactive.forEach(el => {
     el.addEventListener('mouseenter', () => {
-      if (cursorDot) cursorDot.classList.add('hovered');
-      if (cursorRing) cursorRing.classList.add('hovered');
+      if (cursorDot) cursorDot.classList.add('ripple');
     });
     el.addEventListener('mouseleave', () => {
-      if (cursorDot) cursorDot.classList.remove('hovered');
-      if (cursorRing) cursorRing.classList.remove('hovered');
+      if (cursorDot) cursorDot.classList.remove('ripple');
     });
   });
 }
@@ -166,11 +155,9 @@ function initBarba() {
       });
     }
     initNavScramble();
-    // Refresh cursor elements and hover events after page change
+    // Re‑initialise cursor after page change (DOM may have new interactive elements)
     const oldDot = document.querySelector('.cursor-dot');
-    const oldRing = document.querySelector('.cursor-ring');
     if (oldDot) oldDot.remove();
-    if (oldRing) oldRing.remove();
     initCustomCursor();
     ScrollTrigger.refresh();
   });
