@@ -1,4 +1,4 @@
-/* script.js — Dijo Studios | Single‑dot cursor with hover ripple + Barba + marquee + parallax */
+/* script.js — Dijo Studios | Single‑dot cursor (instant follow, ripple on hover) + Barba + marquee + parallax */
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
 ═══════════════════════════════════════════════ */
@@ -13,10 +13,8 @@ gsap.ticker.lagSmoothing(0);
 gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════
-   2. CUSTOM CURSOR (single dot, ripples on hover)
+   2. CUSTOM CURSOR (single dot, instant follow)
 ═══════════════════════════════════════════════ */
-let mouseX = 0, mouseY = 0;
-let dotX = 0, dotY = 0;
 let cursorDot;
 
 function initCustomCursor() {
@@ -27,18 +25,10 @@ function initCustomCursor() {
   cursorDot.className = 'cursor-dot';
   document.body.appendChild(cursorDot);
 
+  // Move cursor directly with mouse position (no lerp)
   document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
+    cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) scale(1)`;
   });
-
-  function animateCursor() {
-    dotX += (mouseX - dotX) * 0.25;
-    dotY += (mouseY - dotY) * 0.25;
-    cursorDot.style.transform = `translate(${dotX}px, ${dotY}px) scale(1)`;
-    requestAnimationFrame(animateCursor);
-  }
-  animateCursor();
 
   attachCursorHoverEvents();
 }
@@ -155,7 +145,7 @@ function initBarba() {
       });
     }
     initNavScramble();
-    // Re‑initialise cursor after page change (DOM may have new interactive elements)
+    // Re‑initialise cursor after page change
     const oldDot = document.querySelector('.cursor-dot');
     if (oldDot) oldDot.remove();
     initCustomCursor();
