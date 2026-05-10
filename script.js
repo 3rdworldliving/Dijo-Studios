@@ -198,7 +198,6 @@ function initBarba() {
             ease: 'power2.out',
             onComplete: () => {
               initPageSpecifics(data.next.namespace);
-              // Add .new-page class to trigger scale‑in animations
               const wrapper = data.next.container;
               if (wrapper) wrapper.classList.add('new-page');
               setTimeout(() => {
@@ -224,7 +223,6 @@ function initBarba() {
       });
     }
     initNavScramble();
-    // Re-initialise cursor after page change
     const oldDot = document.querySelector('.cursor-dot');
     if (oldDot) oldDot.remove();
     initCustomCursor();
@@ -233,7 +231,7 @@ function initBarba() {
 }
 
 /* ═══════════════════════════════════════════════
-   6. PAGE-SPECIFIC INITIALIZATION (unchanged)
+   6. PAGE-SPECIFIC INITIALIZATION
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
   ScrollTrigger.getAll().forEach(t => t.kill());
