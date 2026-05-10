@@ -134,6 +134,13 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
   text-align: center;
   margin-top: 1.5rem; }
 
+/* New home page headline */
+.page-headline {
+  text-align: center;
+  font-size: clamp(2rem, 6vw, 4rem);
+  margin-top: 2rem;
+}
+
 /* ── Marquee (pure CSS — runs autonomously, never tied to scroll) ── */
 .marquee-wrapper { overflow: hidden; padding: 2rem 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); }
 .marquee { display: flex; gap: 2rem; white-space: nowrap; will-change: transform; animation: marquee-scroll 25s linear infinite; }
@@ -226,31 +233,127 @@ footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
 /* ── Scroll Reveal (initial state) ── */
 .reveal-up { opacity: 0; }
 
-/* ── Loading Screen ── */
-#site-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease, visibility 0.6s ease; }
-.loader-text { 
-  font-family: var(--font-heading); font-weight: 900; color: var(--text); 
-  font-size: clamp(3rem, 12vw, 8rem); 
-  line-height: 1.2;
-  text-align: center; 
-  white-space: nowrap;
-  display: inline-block;
-  margin: 0 auto;
+/* ── Loading Screen (new circular loader) ── */
+.loader {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  margin: auto;
+  width: 120px;
+  height: 120px;
+  z-index: 10000;
+  transition: transform 1.25s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
 }
-.loader-text .lch {
-  display: inline-block;
-  min-width: 0.6em;
-  text-align: center;
+.loader.loaded {
+  transform: scale(0);
+  transition-delay: 0.5s;
 }
-#site-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader .spinner {
+  opacity: 1;
+  transition: opacity 0.1s 0.1s;
+  animation: rotate 1.25s linear infinite;
+}
+.loader.loaded .spinner {
+  opacity: 0;
+}
+.loader .spinner .path {
+  stroke: var(--highlight);
+  stroke-width: 4;
+  stroke-dasharray: 125.6;
+  stroke-dashoffset: 125.6;
+  animation: dash 1.25s ease-in-out infinite;
+}
+@keyframes rotate {
+  100% { transform: rotate(360deg); }
+}
+@keyframes dash {
+  0% { stroke-dashoffset: 125.6; }
+  50% { stroke-dashoffset: 31.4; transform: rotate(135deg); }
+  100% { stroke-dashoffset: 125.6; transform: rotate(450deg); }
+}
+.loader .core .path {
+  fill: var(--highlight);
+  visibility: hidden;
+  transform: scale(1);
+  transition: all 0.3s;
+}
+.loader.loaded .core .path {
+  animation: corePulse 2s ease-in-out forwards;
+}
+@keyframes corePulse {
+  0% { visibility: hidden; transform: scale(1); }
+  25%, 85% { opacity: 1; visibility: visible; transform: scale(1000); }
+  100% { opacity: 0; transform: scale(1); }
+}
+.loader .layer .path {
+  stroke: rgba(245,245,245,0.5);
+  stroke-dasharray: var(--c);
+  stroke-dashoffset: var(--c);
+  visibility: hidden;
+}
+.loader.loaded .layer-1 .path {
+  animation: layerAnim 1.25s ease-in forwards;
+}
+.loader.loaded .layer-2 .path {
+  animation: layerAnim 1.25s ease-in 0.05s forwards;
+}
+.loader.loaded .layer-3 .path {
+  animation: layerAnim 1.25s ease-in 0.1s forwards;
+}
+.loader.loaded .layer-4 .path {
+  animation: layerAnim 1.25s ease-in 0.15s forwards;
+}
+.loader.loaded .layer-5 .path {
+  animation: layerAnim 1.25s ease-in 0.2s forwards;
+}
+.loader.loaded .layer-6 .path {
+  animation: layerAnim 1.25s ease-in 0.25s forwards;
+}
+.loader.loaded .layer-7 .path {
+  animation: layerAnim 1.25s ease-in 0.3s forwards;
+}
+.loader.loaded .layer-8 .path {
+  animation: layerAnim 1.25s ease-in 0.35s forwards;
+}
+@keyframes layerAnim {
+  0% { stroke-dasharray: var(--c); stroke-dashoffset: var(--c); visibility: visible; }
+  75% { stroke-width: var(--w); stroke-dashoffset: calc(var(--c) / 2); }
+  100% { stroke: #f5f5f5; stroke-width: calc(var(--w) * 3); stroke-dasharray: calc(var(--c) + 6.28); stroke-dashoffset: 0; visibility: visible; }
+}
+.layer-1 { --c: 439.6; --w: 15; transform: rotate(-30deg); }
+.layer-2 { --c: 753.6; --w: 20; transform: rotate(-60deg); }
+.layer-3 { --c: 1130.4; --w: 40; transform: rotate(-70deg); }
+.layer-4 { --c: 1507.2; --w: 20; transform: rotate(-90deg); }
+.layer-5 { --c: 1884; --w: 30; transform: rotate(-20deg); }
+.layer-6 { --c: 2386.4; --w: 45; transform: rotate(-80deg); }
+.layer-7 { --c: 2826; --w: 75; transform: rotate(-10deg); }
+.layer-8 { --c: 3391.2; --w: 250; transform: rotate(-70deg); }
 
-/* Mobile adjustment for loader */
-@media (max-width: 600px) {
-  .loader-text {
-    font-size: clamp(2rem, 8vw, 3.5rem) !important;
-    white-space: nowrap;
-  }
+/* Page transition animations */
+.new-page .img {
+  animation: scaleIn 0.3s both cubic-bezier(0.87, -0.41, 0.19, 1.44);
 }
+.new-page .txt {
+  animation: scaleXIn 0.1s both ease-out;
+}
+.new-page .btn {
+  animation: scaleIn 0.3s both cubic-bezier(0.87, -0.41, 0.19, 1.44);
+}
+@keyframes scaleXIn {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes scaleIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+/* Delay helpers */
+.dl1 { animation-delay: 0.75s; }
+.dl2 { animation-delay: 0.85s; }
+.dl3 { animation-delay: 0.95s; }
+.dl4 { animation-delay: 1.05s; }
+.dl5 { animation-delay: 1.15s; }
+.dl6 { animation-delay: 1.25s; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
