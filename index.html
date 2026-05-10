@@ -34,16 +34,15 @@
   </header>
 
   <main data-barba="container" data-barba-namespace="home">
-    <!-- Headline section (centered) -->
-    <div class="container" style="text-align: center; margin: 6rem 0 2rem;">
-      <p class="subtitle" style="margin-bottom: 0.5rem;">Food Photographer · Johannesburg</p>
-      <h1 class="page-headline">Where culture meets the plate</h1>
-      <div class="button-wrapper" style="margin-top: 2rem;">
-        <a href="about.html" class="btn">Explorer Mfana! <span>→</span></a>
+    <!-- Hero section with full‑centered content -->
+    <div class="hero-centered">
+      <div class="container hero-content">
+        <p class="subtitle">Food Photographer · Johannesburg</p>
+        <h1 class="page-headline">Where culture meets the plate</h1>
       </div>
     </div>
 
-    <!-- Original portfolio gallery -->
+    <!-- Lightbox -->
     <div id="lightbox">
       <div class="lb-backdrop" onclick="closeLightbox()"></div>
       <span class="lb-counter" id="lb-counter">1 / 1</span>
@@ -62,7 +61,7 @@
           <input type="file" id="file-input" multiple accept="image/*" style="display:none;">
         </div>
         <div class="grid" id="gallery">
-          <!-- Gallery items appear here dynamically -->
+          <!-- Gallery items injected dynamically -->
         </div>
       </div>
     </section>
