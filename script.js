@@ -1,4 +1,4 @@
-/* script.js — Dijo Studios | Circular loader + Barba transitions + custom cursor + all features */
+/* script.js — Dijo Studios | Text‑scramble loader + Barba transitions + pop‑up scale‑in */
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
 ═══════════════════════════════════════════════ */
@@ -45,25 +45,77 @@ function attachCursorHoverEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   3. LOADER & PAGE TRANSITIONS
+   3. LOADER (original text scramble)
 ═══════════════════════════════════════════════ */
-function showLoader() {
-  const loader = document.getElementById('loader');
-  if (loader) {
-    loader.style.display = 'flex';
-    loader.classList.remove('loaded');
-    void loader.offsetWidth; // force reflow
-  }
-}
-
-function hideLoader() {
-  const loader = document.getElementById('loader');
-  if (loader) {
-    loader.classList.add('loaded');
+function initLoader(onComplete) {
+  lenis.stop();
+  const loader = document.createElement('div');
+  loader.id = 'site-loader';
+  loader.innerHTML = '<span class="loader-text" id="loader-text">Dijo Studios</span>';
+  document.body.prepend(loader);
+  document.body.style.overflow = 'hidden';
+  const txt = document.getElementById('loader-text');
+  const pulseAnim = gsap.to(txt, {
+    color: '#D4AF37',
+    textShadow: '0 0 35px rgba(212,175,55,0.5)',
+    duration: 0.7, repeat: -1, yoyo: true, ease: 'power1.inOut'
+  });
+  const TARGET = 'DIJO STUDIOS';
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
+  const FRAME_MS = 80, STAGGER = 120, SPINS = 12;
+  txt.innerHTML = TARGET.split('').map(ch =>
+    ch === ' '
+      ? '<span class="lch" style="display:inline-block;width:0.35em">&nbsp;</span>'
+      : `<span class="lch" data-final="${ch}">${ch}</span>`
+  ).join('');
+  const letterSpans = txt.querySelectorAll('span.lch[data-final]');
+  let lettersLanded = 0;
+  gsap.from(txt, { opacity: 0, scale: 0.92, duration: 0.5, ease: 'power2.out' });
+  letterSpans.forEach((span, i) => {
+    const finalChar = span.dataset.final;
+    let frame = 0;
     setTimeout(() => {
-      if (loader) loader.style.display = 'none';
-    }, 2000);
-  }
+      const iv = setInterval(() => {
+        if (frame < SPINS) {
+          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
+        } else {
+          clearInterval(iv);
+          span.textContent = finalChar;
+          lettersLanded++;
+          if (lettersLanded === letterSpans.length) {
+            setTimeout(() => {
+              pulseAnim.kill();
+              gsap.to(loader, {
+                opacity: 0, duration: 0.6, ease: 'power2.inOut',
+                onComplete: () => {
+                  loader.remove();
+                  document.body.style.overflow = '';
+                  lenis.start();
+                  if (onComplete) onComplete();
+                }
+              });
+              loader.classList.add('hide');
+            }, 1500);
+          }
+        }
+        frame++;
+      }, FRAME_MS);
+    }, i * STAGGER);
+  });
+  setTimeout(() => {
+    if (!loader.parentNode || loader.classList.contains('hide')) return;
+    pulseAnim.kill();
+    gsap.to(loader, {
+      opacity: 0, duration: 0.6, ease: 'power2.inOut',
+      onComplete: () => {
+        loader.remove();
+        document.body.style.overflow = '';
+        lenis.start();
+        if (onComplete) onComplete();
+      }
+    });
+    loader.classList.add('hide');
+  }, 10000);
 }
 
 /* ═══════════════════════════════════════════════
@@ -73,9 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initGlobalEvents();
   initNavScramble();
   initCustomCursor();
-
-  // Show loader on first load
-  showLoader();
 
   const header = document.querySelector('header');
   let lastY = 0;
@@ -92,14 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!hasPlayedLoader) {
     sessionStorage.setItem('dijo_loader_played', 'true');
-    // Hide loader after initial animation
-    setTimeout(() => {
-      hideLoader();
-      initPageSpecifics(namespace);
-    }, 2000);
+    initLoader(() => initPageSpecifics(namespace));
   } else {
-    // If loader already played, hide it immediately and init
-    hideLoader();
     initPageSpecifics(namespace);
   }
 
@@ -130,7 +173,7 @@ function initGlobalEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   5. BARBA.JS PAGE TRANSITIONS (with loader)
+   5. BARBA.JS PAGE TRANSITIONS (with pop‑up scale‑in)
 ═══════════════════════════════════════════════ */
 function initBarba() {
   barba.init({
@@ -138,8 +181,6 @@ function initBarba() {
     transitions: [{
       name: 'fade-transition',
       leave(data) {
-        // Show loader again for page transition
-        showLoader();
         return gsap.to(data.current.container, {
           opacity: 0,
           duration: 0.4,
@@ -153,18 +194,16 @@ function initBarba() {
           { opacity: 0 },
           {
             opacity: 1,
-            duration: 0.6,
+            duration: 0.2,
             ease: 'power2.out',
             onComplete: () => {
-              // Hide loader after new page is ready
-              hideLoader();
               initPageSpecifics(data.next.namespace);
-              // Add .new-page class for entry animations
+              // Add .new-page class to trigger scale‑in animations
               const wrapper = data.next.container;
               if (wrapper) wrapper.classList.add('new-page');
               setTimeout(() => {
                 if (wrapper) wrapper.classList.remove('new-page');
-              }, 1500);
+              }, 800);
             }
           }
         );
@@ -194,7 +233,7 @@ function initBarba() {
 }
 
 /* ═══════════════════════════════════════════════
-   6. PAGE-SPECIFIC INITIALIZATION
+   6. PAGE-SPECIFIC INITIALIZATION (unchanged)
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
   ScrollTrigger.getAll().forEach(t => t.kill());
@@ -284,13 +323,6 @@ function initAnimations() {
       scrollTrigger: { trigger: img, start: 'top bottom', end: 'bottom top', scrub: 1.5 }
     });
   });
-
-  // F. Marquee — pure CSS (already defined in style.css)
-  const marquee = document.querySelector('.marquee');
-  if (marquee && marquee._marqueeAnim) {
-    marquee._marqueeAnim.kill();
-    marquee._marqueeAnim = null;
-  }
 
   animateCounters();
   const footer = document.querySelector('footer');
@@ -394,80 +426,8 @@ function attachPortfolioEffectsToNewCard(card) {
 }
 
 /* ═══════════════════════════════════════════════
-   8. UTILITY FUNCTIONS (loader scramble, nav scramble, counters, uploader)
+   8. UTILITY FUNCTIONS (nav scramble, counters, uploader)
 ═══════════════════════════════════════════════ */
-// Original loader scramble (kept for compatibility – not used anymore because we replaced with circular loader)
-function initLoader(onComplete) {
-  lenis.stop();
-  const loader = document.createElement('div');
-  loader.id = 'site-loader';
-  loader.innerHTML = '<span class="loader-text" id="loader-text">Dijo Studios</span>';
-  document.body.prepend(loader);
-  document.body.style.overflow = 'hidden';
-  const txt = document.getElementById('loader-text');
-  const pulseAnim = gsap.to(txt, {
-    color: '#D4AF37',
-    textShadow: '0 0 35px rgba(212,175,55,0.5)',
-    duration: 0.7, repeat: -1, yoyo: true, ease: 'power1.inOut'
-  });
-  const TARGET = 'DIJO STUDIOS';
-  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-  const FRAME_MS = 80, STAGGER = 120, SPINS = 12;
-  txt.innerHTML = TARGET.split('').map(ch =>
-    ch === ' '
-      ? '<span class="lch" style="display:inline-block;width:0.35em">&nbsp;</span>'
-      : `<span class="lch" data-final="${ch}">${ch}</span>`
-  ).join('');
-  const letterSpans = txt.querySelectorAll('span.lch[data-final]');
-  let lettersLanded = 0;
-  gsap.from(txt, { opacity: 0, scale: 0.92, duration: 0.5, ease: 'power2.out' });
-  letterSpans.forEach((span, i) => {
-    const finalChar = span.dataset.final;
-    let frame = 0;
-    setTimeout(() => {
-      const iv = setInterval(() => {
-        if (frame < SPINS) {
-          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
-        } else {
-          clearInterval(iv);
-          span.textContent = finalChar;
-          lettersLanded++;
-          if (lettersLanded === letterSpans.length) {
-            setTimeout(() => {
-              pulseAnim.kill();
-              gsap.to(loader, {
-                opacity: 0, duration: 0.6, ease: 'power2.inOut',
-                onComplete: () => {
-                  loader.remove();
-                  document.body.style.overflow = '';
-                  lenis.start();
-                  if (onComplete) onComplete();
-                }
-              });
-              loader.classList.add('hide');
-            }, 1500);
-          }
-        }
-        frame++;
-      }, FRAME_MS);
-    }, i * STAGGER);
-  });
-  setTimeout(() => {
-    if (!loader.parentNode || loader.classList.contains('hide')) return;
-    pulseAnim.kill();
-    gsap.to(loader, {
-      opacity: 0, duration: 0.6, ease: 'power2.inOut',
-      onComplete: () => {
-        loader.remove();
-        document.body.style.overflow = '';
-        lenis.start();
-        if (onComplete) onComplete();
-      }
-    });
-    loader.classList.add('hide');
-  }, 10000);
-}
-
 function initNavScramble() {
   const linksWrap = document.querySelector('.nav-links');
   if (!linksWrap || window.innerWidth < 768) return;
