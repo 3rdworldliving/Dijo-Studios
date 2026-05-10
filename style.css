@@ -49,7 +49,7 @@ img { max-width: 100%; display: block; }
   transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
 
-/* ── Header & Navigation (unchanged) ── */
+/* ── Header & Navigation ── */
 header {
 position: fixed; top: 0; left: 0; width: 100%;
 background: rgba(10,10,10,0.9); backdrop-filter: blur(10px);
@@ -129,10 +129,18 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
 }
 .btn:hover { background: var(--highlight); transform: translateY(-2px); }
 
-/* Centering for home page elements */
-.button-wrapper {
+/* Centring for home page hero */
+.hero-centered {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: -80px;
+  padding-top: 80px;
+}
+.hero-content {
+  width: 100%;
 }
 .page-headline {
   text-align: center;
@@ -144,7 +152,7 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
   margin-right: auto;
 }
 
-/* ── Stats & Brands (unchanged) ── */
+/* ── Stats & Brands ── */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2rem; margin: 3rem 0; }
 .stat-box { background: var(--surface); padding: 2rem; text-align: center; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
 .stat-box:hover { border-color: var(--highlight); transform: translateY(-5px); }
@@ -154,7 +162,7 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
 .brand-tag { padding: 0.5rem 1rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; font-size: 0.85rem; transition: 0.3s; }
 .brand-tag:hover { border-color: var(--highlight); color: var(--text); }
 
-/* ── Upload Zone & Gallery (unchanged) ── */
+/* ── Upload Zone & Gallery ── */
 .upload-zone { border: 2px dashed rgba(255,255,255,0.2); padding: 4rem; text-align: center; background: var(--surface); margin-bottom: 2rem; cursor: pointer; transition: 0.3s; }
 .upload-zone:hover, .upload-zone.dragover { border-color: var(--highlight); background: rgba(212,175,55,0.05); }
 .clear-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text); padding: 0.8rem 2rem; cursor: pointer; border-radius: 50px; font-size: 0.8rem; transition: 0.3s; }
@@ -197,7 +205,7 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
 .card-overlay .ripple { position: absolute; border-radius: 50%; background: rgba(212,175,55,0.35); transform: scale(0); animation: ripple-anim 0.55s ease-out forwards; pointer-events: none; }
 @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
 
-/* ── Lightbox (unchanged) ── */
+/* ── Lightbox ── */
 #lightbox { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s; }
 #lightbox.open { opacity: 1; visibility: visible; }
 .lb-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.94); backdrop-filter: blur(10px); cursor: zoom-out; }
@@ -214,14 +222,14 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
 .lb-prev:hover { transform: translateY(-50%) translateX(-3px); } .lb-next:hover { transform: translateY(-50%) translateX(3px); }
 @media (max-width: 600px) { .lb-prev { left: 0.6rem; } .lb-next { right: 0.6rem; } .lb-close { top: 0.8rem; right: 0.8rem; } }
 
-/* ── Contact Form (unchanged) ── */
+/* ── Contact Form ── */
 form { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
 input, textarea { background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); color: var(--text); padding: 1rem; font-family: inherit; outline: none; transition: 0.3s; font-size: 16px; }
 textarea { min-height: 150px; resize: vertical; }
 input:focus, textarea:focus { border-bottom-color: var(--highlight); }
 .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
 
-/* ── Footer (unchanged) ── */
+/* ── Footer ── */
 footer { padding: 4rem 0; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4rem; color: #aaa; font-size: 0.9rem; }
 footer a { color: var(--highlight); margin: 0 0.5rem; transition: all 0.3s ease; display: inline-block; }
 footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
@@ -253,7 +261,7 @@ footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
   }
 }
 
-/* ── Page transition pop‑up (scale‑in effects) ── */
+/* ── Page transition pop‑up (scale‑in) ── */
 .new-page .gallery-card,
 .new-page .btn,
 .new-page .stat-box,
@@ -279,7 +287,7 @@ footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
   100% { opacity: 1; transform: scale(1); }
 }
 
-/* ── Responsive (unchanged) ── */
+/* ── Responsive ── */
 @media (max-width: 768px) {
 .contact-grid { grid-template-columns: 1fr; }
 section { min-height: auto; padding: 5rem 0 3rem; }
