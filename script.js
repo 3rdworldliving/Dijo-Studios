@@ -1,4 +1,4 @@
-/* script.js — Dijo Studios | Single‑dot cursor (instant follow, ripple on hover) + Barba + marquee + parallax */
+/* script.js — Dijo Studios | Circular loader + Barba transitions + custom cursor + all features */
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
 ═══════════════════════════════════════════════ */
@@ -13,7 +13,7 @@ gsap.ticker.lagSmoothing(0);
 gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════
-   2. CUSTOM CURSOR (single dot, instant follow)
+   2. CUSTOM CURSOR (single dot, instant follow, ripple on hover)
 ═══════════════════════════════════════════════ */
 let cursorDot;
 
@@ -25,7 +25,6 @@ function initCustomCursor() {
   cursorDot.className = 'cursor-dot';
   document.body.appendChild(cursorDot);
 
-  // Move cursor directly with mouse position (no lerp)
   document.addEventListener('mousemove', (e) => {
     cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) scale(1)`;
   });
@@ -46,12 +45,37 @@ function attachCursorHoverEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   3. GLOBAL INITIALIZATION
+   3. LOADER & PAGE TRANSITIONS
+═══════════════════════════════════════════════ */
+function showLoader() {
+  const loader = document.getElementById('loader');
+  if (loader) {
+    loader.style.display = 'flex';
+    loader.classList.remove('loaded');
+    void loader.offsetWidth; // force reflow
+  }
+}
+
+function hideLoader() {
+  const loader = document.getElementById('loader');
+  if (loader) {
+    loader.classList.add('loaded');
+    setTimeout(() => {
+      if (loader) loader.style.display = 'none';
+    }, 2000);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   4. GLOBAL INITIALIZATION
 ═══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initGlobalEvents();
   initNavScramble();
   initCustomCursor();
+
+  // Show loader on first load
+  showLoader();
 
   const header = document.querySelector('header');
   let lastY = 0;
@@ -68,8 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!hasPlayedLoader) {
     sessionStorage.setItem('dijo_loader_played', 'true');
-    initLoader(() => initPageSpecifics(namespace));
+    // Hide loader after initial animation
+    setTimeout(() => {
+      hideLoader();
+      initPageSpecifics(namespace);
+    }, 2000);
   } else {
+    // If loader already played, hide it immediately and init
+    hideLoader();
     initPageSpecifics(namespace);
   }
 
@@ -100,7 +130,7 @@ function initGlobalEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   4. BARBA.JS PAGE TRANSITIONS
+   5. BARBA.JS PAGE TRANSITIONS (with loader)
 ═══════════════════════════════════════════════ */
 function initBarba() {
   barba.init({
@@ -108,6 +138,8 @@ function initBarba() {
     transitions: [{
       name: 'fade-transition',
       leave(data) {
+        // Show loader again for page transition
+        showLoader();
         return gsap.to(data.current.container, {
           opacity: 0,
           duration: 0.4,
@@ -124,7 +156,15 @@ function initBarba() {
             duration: 0.6,
             ease: 'power2.out',
             onComplete: () => {
+              // Hide loader after new page is ready
+              hideLoader();
               initPageSpecifics(data.next.namespace);
+              // Add .new-page class for entry animations
+              const wrapper = data.next.container;
+              if (wrapper) wrapper.classList.add('new-page');
+              setTimeout(() => {
+                if (wrapper) wrapper.classList.remove('new-page');
+              }, 1500);
             }
           }
         );
@@ -145,7 +185,7 @@ function initBarba() {
       });
     }
     initNavScramble();
-    // Re‑initialise cursor after page change
+    // Re-initialise cursor after page change
     const oldDot = document.querySelector('.cursor-dot');
     if (oldDot) oldDot.remove();
     initCustomCursor();
@@ -154,7 +194,7 @@ function initBarba() {
 }
 
 /* ═══════════════════════════════════════════════
-   5. PAGE-SPECIFIC INITIALIZATION
+   6. PAGE-SPECIFIC INITIALIZATION
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
   ScrollTrigger.getAll().forEach(t => t.kill());
@@ -166,7 +206,7 @@ function initPageSpecifics(namespace) {
     ScrollTrigger.refresh();
   }, 100);
 
-  if (namespace === 'portfolio') {
+  if (namespace === 'portfolio' || namespace === 'home') {
     setupUploader('drop-zone', 'file-input', 'gallery', 'dijoImages');
     initPortfolioEffects();
   }
@@ -266,7 +306,7 @@ function initAnimations() {
 }
 
 /* ═══════════════════════════════════════════════
-   6. PORTFOLIO ENHANCEMENTS (floating parallax + mouse follow)
+   7. PORTFOLIO ENHANCEMENTS (floating parallax + mouse follow)
 ═══════════════════════════════════════════════ */
 function initPortfolioEffects() {
   destroyFloatingParallax();
@@ -354,8 +394,9 @@ function attachPortfolioEffectsToNewCard(card) {
 }
 
 /* ═══════════════════════════════════════════════
-   7. UTILITY FUNCTIONS (loader, scramble, counters, uploader)
+   8. UTILITY FUNCTIONS (loader scramble, nav scramble, counters, uploader)
 ═══════════════════════════════════════════════ */
+// Original loader scramble (kept for compatibility – not used anymore because we replaced with circular loader)
 function initLoader(onComplete) {
   lenis.stop();
   const loader = document.createElement('div');
