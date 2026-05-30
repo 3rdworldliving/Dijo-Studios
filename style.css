@@ -333,7 +333,7 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
   pointer-events: auto;
 }
 
-/* ── Mobile: hide custom cursor, scrollable lightbox ── */
+/* ── Mobile: hide custom cursor, scrollable lightbox, and center images ── */
 @media (hover: none) and (pointer: coarse) {
   /* Hide the gold dot cursor — irrelevant on touch */
   .cursor-dot { display: none !important; }
@@ -345,25 +345,25 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
     cursor: auto !important;
   }
 
-  /* Lightbox: scroll vertically so tall images aren't cut off */
+  /* Lightbox: scroll vertically AND center images both ways */
   #lightbox {
-    align-items: flex-start;
+    align-items: center;
     padding-top: 60px;
     padding-bottom: 80px;
     justify-content: center;
+    overflow-y: auto;
   }
   #lightbox .lb-img-wrap {
     max-height: none;
     max-width: 100vw;
     width: 100%;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
   }
   #lb-img {
     max-height: none;
     max-width: 100vw;
-    /* Landscape images: fit width and centre; portrait: full width */
     width: auto;
     height: auto;
     max-width: 100vw;
