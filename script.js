@@ -1,4 +1,4 @@
-/* script.js — Dijo Studios | Text‑scramble loader + Barba transitions + pop‑up scale‑in */
+/* script.js — Dijo Studios | Snake‑reveal gallery + spotlight headline */
 /* ═══════════════════════════════════════════════
    1. LENIS SMOOTH SCROLL
 ═══════════════════════════════════════════════ */
@@ -13,42 +13,33 @@ gsap.ticker.lagSmoothing(0);
 gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════
-   2. CUSTOM CURSOR (single dot, instant follow, ripple on hover)
+   2. CUSTOM CURSOR
 ═══════════════════════════════════════════════ */
 let cursorDot;
 
 function initCustomCursor() {
-  // Don't show custom cursor on touch/mobile devices
   if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return;
-
   const oldDot = document.querySelector('.cursor-dot');
   if (oldDot) oldDot.remove();
-
   cursorDot = document.createElement('div');
   cursorDot.className = 'cursor-dot';
   document.body.appendChild(cursorDot);
-
   document.addEventListener('mousemove', (e) => {
     cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) scale(1)`;
   });
-
   attachCursorHoverEvents();
 }
 
 function attachCursorHoverEvents() {
   const interactive = document.querySelectorAll('a, button, .btn, .gallery-card, .brand-tag, .logo-container, .upload-zone, .clear-btn, [role="button"], input, textarea, .nav-links a');
   interactive.forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      if (cursorDot) cursorDot.classList.add('ripple');
-    });
-    el.addEventListener('mouseleave', () => {
-      if (cursorDot) cursorDot.classList.remove('ripple');
-    });
+    el.addEventListener('mouseenter', () => { if (cursorDot) cursorDot.classList.add('ripple'); });
+    el.addEventListener('mouseleave', () => { if (cursorDot) cursorDot.classList.remove('ripple'); });
   });
 }
 
 /* ═══════════════════════════════════════════════
-   3. LOADER (original text scramble)
+   3. LOADER
 ═══════════════════════════════════════════════ */
 function initLoader(onComplete) {
   lenis.stop();
@@ -122,7 +113,7 @@ function initLoader(onComplete) {
 }
 
 /* ═══════════════════════════════════════════════
-   4. GLOBAL INITIALIZATION
+   4. GLOBAL INIT
 ═══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   initGlobalEvents();
@@ -167,7 +158,6 @@ function initGlobalEvents() {
       });
     });
   }
-
   document.querySelectorAll('.logo-container').forEach(logo => {
     logo.addEventListener('click', () => {
       sessionStorage.removeItem('dijo_loader_played');
@@ -176,7 +166,7 @@ function initGlobalEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   5. BARBA.JS PAGE TRANSITIONS (with pop‑up scale‑in)
+   5. BARBA TRANSITIONS
 ═══════════════════════════════════════════════ */
 function initBarba() {
   barba.init({
@@ -234,7 +224,7 @@ function initBarba() {
 }
 
 /* ═══════════════════════════════════════════════
-   6. PAGE-SPECIFIC INITIALIZATION
+   6. PAGE-SPECIFIC INIT
 ═══════════════════════════════════════════════ */
 function initPageSpecifics(namespace) {
   ScrollTrigger.getAll().forEach(t => t.kill());
@@ -246,20 +236,61 @@ function initPageSpecifics(namespace) {
     ScrollTrigger.refresh();
   }, 100);
 
+  if (namespace === 'home') {
+    initHeadlineSpotlight();
+  }
+
   if (namespace === 'portfolio' || namespace === 'home') {
     initStaticGallery();
     if (namespace === 'portfolio') {
       initPortfolioEffects();
     } else {
-      // Home: attach mouse-follow only, no floating parallax (breaks CSS masonry columns)
       destroyFloatingParallax();
       document.querySelectorAll('.gallery-card').forEach(card => applyMouseFollowToCard(card));
     }
   }
 }
 
+/* ═══════════════════════════════════════════════
+   7. SPOTLIGHT HEADLINE
+═══════════════════════════════════════════════ */
+function initHeadlineSpotlight() {
+  const container = document.querySelector('.spotlight-headline');
+  if (!container) return;
+  const highlight = container.querySelector('.highlight-layer');
+  if (!highlight) return;
+
+  const updateClipPath = (e) => {
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const radius = 80;
+    highlight.style.clipPath = `circle(${radius}px at ${mouseX}px ${mouseY}px)`;
+  };
+
+  const showHighlight = () => {
+    highlight.classList.add('active');
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    highlight.style.clipPath = `circle(80px at ${centerX}px ${centerY}px)`;
+    container.addEventListener('mousemove', updateClipPath);
+  };
+
+  const hideHighlight = () => {
+    highlight.classList.remove('active');
+    highlight.style.clipPath = `circle(0% at 0% 0%)`;
+    container.removeEventListener('mousemove', updateClipPath);
+  };
+
+  container.addEventListener('mouseenter', showHighlight);
+  container.addEventListener('mouseleave', hideHighlight);
+}
+
+/* ═══════════════════════════════════════════════
+   8. ANIMATIONS
+═══════════════════════════════════════════════ */
 function initAnimations() {
-  // A. Headings: Mask Reveal + Color Wave
   document.querySelectorAll('h1, h2').forEach(heading => {
     if (heading.closest('#site-loader')) return;
     gsap.set(heading, { opacity: 1 });
@@ -280,7 +311,6 @@ function initAnimations() {
     });
   });
 
-  // B. SplitType Mask Reveal for Paragraphs
   const textElements = document.querySelectorAll('section p:not(.stat-box p):not(.upload-zone p)');
   textElements.forEach(textEl => {
     gsap.set(textEl, { opacity: 1 });
@@ -292,7 +322,6 @@ function initAnimations() {
     });
   });
 
-  // C. General Element Reveals
   gsap.utils.toArray('.reveal-up').forEach(el => {
     if (['p', 'h1', 'h2'].includes(el.tagName.toLowerCase())) return;
     gsap.fromTo(el, { opacity: 0, y: 48 }, {
@@ -301,7 +330,6 @@ function initAnimations() {
     });
   });
 
-  // D. Stats & Brands
   const statBoxes = gsap.utils.toArray('.stat-box');
   if (statBoxes.length) {
     gsap.fromTo(statBoxes,
@@ -323,7 +351,6 @@ function initAnimations() {
     );
   }
 
-  // E. Image parallax (skip gallery cards — breaks masonry column layout)
   gsap.utils.toArray('section img:not(.logo-img)').forEach(img => {
     if (img.closest('.gallery-card')) return;
     gsap.to(img, {
@@ -346,7 +373,7 @@ function initAnimations() {
 }
 
 /* ═══════════════════════════════════════════════
-   7. PORTFOLIO ENHANCEMENTS (floating parallax + mouse follow)
+   9. PORTFOLIO EFFECTS
 ═══════════════════════════════════════════════ */
 function initPortfolioEffects() {
   destroyFloatingParallax();
@@ -423,18 +450,227 @@ function applyMouseFollowToCard(card) {
   card._mouseLeaveHandler = onMouseLeave;
 }
 
-function attachPortfolioEffectsToNewCard(card) {
-  if (!document.querySelector('[data-barba-namespace="portfolio"]')) return;
-  const allCards = Array.from(document.querySelectorAll('.gallery-card'));
-  const newIndex = allCards.indexOf(card);
-  if (newIndex !== -1 && !card._fpTrigger) {
-    applyFloatingParallaxToCard(card, newIndex);
-    applyMouseFollowToCard(card);
-  }
+/* ═══════════════════════════════════════════════
+   10. SNAKE REVEAL + LIGHTBOX ORDER
+═══════════════════════════════════════════════ */
+let snakeOrderedCards = [];
+let snakeOrderedSrcs = [];
+
+function computeSnakeOrder(cards) {
+  if (!cards.length) return [];
+
+  const container = document.querySelector('.gallery-wrap') || document.body;
+  const rects = cards.map(card => {
+    const rect = card.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    return {
+      card,
+      top: rect.top - containerRect.top,
+      left: rect.left - containerRect.left,
+      bottom: rect.bottom - containerRect.top,
+    };
+  });
+
+  const rows = [];
+  rects.forEach(r => {
+    let added = false;
+    for (let row of rows) {
+      if (Math.abs(row.y - r.top) < 30) {
+        row.cards.push(r);
+        added = true;
+        break;
+      }
+    }
+    if (!added) {
+      rows.push({ y: r.top, cards: [r] });
+    }
+  });
+
+  rows.sort((a, b) => a.y - b.y);
+  const ordered = [];
+  rows.forEach((row, idx) => {
+    row.cards.sort((a, b) => a.left - b.left);
+    if (idx % 2 === 1) row.cards.reverse();
+    ordered.push(...row.cards.map(r => r.card));
+  });
+  return ordered;
+}
+
+function snakeReveal(cards) {
+  if (!cards.length) return;
+  const ordered = computeSnakeOrder(cards);
+  gsap.set(cards, { opacity: 0, scale: 0.8 });
+  gsap.to(ordered, {
+    opacity: 1,
+    scale: 1,
+    duration: 0.6,
+    stagger: 0.07,
+    ease: "back.out(1)",
+    clearProps: "transform"
+  });
+  snakeOrderedCards = ordered;
+  snakeOrderedSrcs = ordered.map(card => card.dataset.src);
 }
 
 /* ═══════════════════════════════════════════════
-   8. UTILITY FUNCTIONS (nav scramble, counters, uploader)
+   11. GALLERY BUILDING
+═══════════════════════════════════════════════ */
+const GALLERY_IMAGES = [
+  'images/Dijo-Studios-Food-894.jpg',  'images/Dijo-Studios-Food-911.jpg',  'images/Dijo-Studios-Food-923.jpg',
+  'images/Dijo-Studios-Food-927.jpg',  'images/Dijo-Studios-Food-892.jpg',  'images/Dijo-Studios-Food-893.jpg',
+  'images/Dijo-Studios-Food-895.jpg',  'images/Dijo-Studios-Food-896.jpg',  'images/Dijo-Studios-Food-897.jpg',
+  'images/Dijo-Studios-Food-898.jpg',  'images/Dijo-Studios-Food-899.jpg',  'images/Dijo-Studios-Food-900.jpg',
+  'images/Dijo-Studios-Food-901.jpg',  'images/Dijo-Studios-Food-902.jpg',  'images/Dijo-Studios-Food-903.jpg',
+  'images/Dijo-Studios-Food-904.jpg',  'images/Dijo-Studios-Food-905.jpg',  'images/Dijo-Studios-Food-906.jpg',
+  'images/Dijo-Studios-Food-907.jpg',  'images/Dijo-Studios-Food-908.jpg',  'images/Dijo-Studios-Food-909.jpg',
+  'images/Dijo-Studios-Food-910.jpg',  'images/Dijo-Studios-Food-912.jpg',  'images/Dijo-Studios-Food-913.jpg',
+  'images/Dijo-Studios-Food-914.jpg',  'images/Dijo-Studios-Food-915.jpg',  'images/Dijo-Studios-Food-916.jpg',
+  'images/Dijo-Studios-Food-917.jpg',  'images/Dijo-Studios-Food-918.jpg',  'images/Dijo-Studios-Food-919.jpg',
+  'images/Dijo-Studios-Food-920.jpg',  'images/Dijo-Studios-Food-921.jpg',  'images/Dijo-Studios-Food-922.jpg',
+  'images/Dijo-Studios-Food-924.jpg',  'images/Dijo-Studios-Food-925.jpg',  'images/Dijo-Studios-Food-926.jpg',
+  'images/Dijo-Studios-Food-928.jpg',  'images/Dijo-Studios-Food-929.jpg',  'images/Dijo-Studios-Food-930.jpg',
+  'images/Dijo-Studios-Food-931.jpg',  'images/Dijo-Studios-Food-932.jpg',  'images/Dijo-Studios-Food-933.jpg',
+  'images/Dijo-Studios-Food-934.jpg',  'images/Dijo-Studios-Food-935.jpg',  'images/Dijo-Studios-Food-936.jpg',
+  'images/Dijo-Studios-Food-937.jpg',  'images/Dijo-Studios-Food-938.jpg',  'images/Dijo-Studios-Food-939.jpg',
+  'images/Dijo-Studios-Food-940.jpg',  'images/Dijo-Studios-Food-941.jpg',  'images/Dijo-Studios-Food-942.jpg',
+  'images/Dijo-Studios-Food-943.jpg',  'images/Dijo-Studios-Food-944.jpg',  'images/Dijo-Studios-Food-945.jpg',
+  'images/Dijo-Studios-Food-946.jpg',  'images/Dijo-Studios-Food-947.jpg',  'images/Dijo-Studios-Food-948.jpg',
+  'images/Dijo-Studios-Food-949.jpg'
+];
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function makeCard(src, globalIndex) {
+  const card = document.createElement('div');
+  card.className = 'gallery-card';
+  card.dataset.src = src;
+  card.innerHTML = `<img src="${src}" alt="Dijo Studios Food Photography" loading="lazy"/>
+    <div class="card-overlay">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      </div>
+      <span class="card-label">View</span>
+    </div>`;
+  card.addEventListener('click', () => {
+    const idx = snakeOrderedCards.indexOf(card);
+    if (idx !== -1) openLightbox(idx);
+    else openLightbox(0);
+  });
+  return card;
+}
+
+let _lbIndex = 0;
+const _isMobile = () => window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+function openLightbox(index) {
+  if (!snakeOrderedSrcs.length) return;
+  _lbIndex = Math.min(Math.max(index, 0), snakeOrderedSrcs.length - 1);
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lb-img');
+  const counter = document.getElementById('lb-counter');
+  if (!lb || !img) return;
+  img.src = snakeOrderedSrcs[_lbIndex];
+  if (counter) counter.textContent = `${_lbIndex + 1} / ${snakeOrderedSrcs.length}`;
+  lb.classList.add('open');
+  if (_isMobile()) {
+    lb.style.overflowY = 'auto';
+  } else {
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (lb) { lb.classList.remove('open'); lb.style.overflowY = ''; }
+  document.body.style.overflow = '';
+}
+
+function shiftSlide(dir) {
+  if (!snakeOrderedSrcs.length) return;
+  _lbIndex = (_lbIndex + dir + snakeOrderedSrcs.length) % snakeOrderedSrcs.length;
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lb-img');
+  const counter = document.getElementById('lb-counter');
+  if (!img) return;
+  img.classList.add('switching');
+  setTimeout(() => {
+    img.src = snakeOrderedSrcs[_lbIndex];
+    if (counter) counter.textContent = `${_lbIndex + 1} / ${snakeOrderedSrcs.length}`;
+    img.classList.remove('switching');
+    if (lb && _isMobile()) lb.scrollTop = 0;
+  }, 200);
+}
+
+document.addEventListener('keydown', (e) => {
+  const lb = document.getElementById('lightbox');
+  if (!lb || !lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') shiftSlide(-1);
+  if (e.key === 'ArrowRight') shiftSlide(1);
+});
+
+(function initLightboxSwipe() {
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    const lb = document.getElementById('lightbox');
+    if (!lb || !lb.classList.contains('open')) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const lb = document.getElementById('lightbox');
+    if (!lb || !lb.classList.contains('open')) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+    if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
+      shiftSlide(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+})();
+
+function initStaticGallery() {
+  const gallery = document.getElementById('gallery');
+  const featuredRow = document.getElementById('featured-row');
+  if (!gallery) return;
+  if (gallery.children.length > 0) return;
+
+  const priority = GALLERY_IMAGES.slice(0, 4);
+  const rest = shuffleArray(GALLERY_IMAGES.slice(4));
+
+  if (featuredRow) {
+    priority.forEach((src, i) => {
+      const card = makeCard(src, i);
+      card.classList.add('featured-card');
+      featuredRow.appendChild(card);
+    });
+  }
+
+  rest.forEach((src, i) => {
+    const card = makeCard(src, i + 4);
+    gallery.appendChild(card);
+  });
+
+  setTimeout(() => {
+    const allCards = [...document.querySelectorAll('.gallery-card, .featured-card')];
+    ScrollTrigger.create({
+      trigger: gallery,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        snakeReveal(allCards);
+      }
+    });
+  }, 100);
+}
+
+/* ═══════════════════════════════════════════════
+   12. UTILITIES
 ═══════════════════════════════════════════════ */
 function initNavScramble() {
   const linksWrap = document.querySelector('.nav-links');
@@ -511,190 +747,27 @@ function animateCounters() {
 }
 
 /* ═══════════════════════════════════════════════
-   LIGHTBOX CONTROLS
-═══════════════════════════════════════════════ */
-let _lbIndex = 0;
-
-const _isMobile = () => window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-let _shuffledImages = null;
-const _getImages = () => _shuffledImages || GALLERY_IMAGES;
-
-function openLightbox(index) {
-  _lbIndex = index;
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lb-img');
-  const counter = document.getElementById('lb-counter');
-  if (!lb || !img) return;
-  img.src = _getImages()[_lbIndex];
-  if (counter) counter.textContent = `${_lbIndex + 1} / ${_getImages().length}`;
-  lb.classList.add('open');
-  // On mobile allow vertical scroll inside lightbox; on desktop lock body scroll
-  if (_isMobile()) {
-    lb.style.overflowY = 'auto';
-  } else {
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-function closeLightbox() {
-  const lb = document.getElementById('lightbox');
-  if (lb) { lb.classList.remove('open'); lb.style.overflowY = ''; }
-  document.body.style.overflow = '';
-}
-
-function shiftSlide(dir) {
-  _lbIndex = (_lbIndex + dir + _getImages().length) % _getImages().length;
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lb-img');
-  const counter = document.getElementById('lb-counter');
-  if (!img) return;
-  img.classList.add('switching');
-  setTimeout(() => {
-    img.src = _getImages()[_lbIndex];
-    if (counter) counter.textContent = `${_lbIndex + 1} / ${_getImages().length}`;
-    img.classList.remove('switching');
-    // Scroll back to top after switching image on mobile
-    if (lb && _isMobile()) lb.scrollTop = 0;
-  }, 200);
-}
-
-document.addEventListener('keydown', (e) => {
-  const lb = document.getElementById('lightbox');
-  if (!lb || !lb.classList.contains('open')) return;
-  if (e.key === 'Escape') closeLightbox();
-  if (e.key === 'ArrowLeft') shiftSlide(-1);
-  if (e.key === 'ArrowRight') shiftSlide(1);
-});
-
-// Touch swipe to navigate lightbox on mobile
-(function initLightboxSwipe() {
-  let touchStartX = 0, touchStartY = 0;
-  document.addEventListener('touchstart', (e) => {
-    const lb = document.getElementById('lightbox');
-    if (!lb || !lb.classList.contains('open')) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener('touchend', (e) => {
-    const lb = document.getElementById('lightbox');
-    if (!lb || !lb.classList.contains('open')) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-    // Only trigger horizontal swipe if more horizontal than vertical
-    if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
-      shiftSlide(dx < 0 ? 1 : -1);
-    }
-  }, { passive: true });
-})();
-
-const GALLERY_IMAGES = [
-  'images/Dijo-Studios-Food-894.jpg',  'images/Dijo-Studios-Food-911.jpg',  'images/Dijo-Studios-Food-923.jpg',
-  'images/Dijo-Studios-Food-927.jpg',  'images/Dijo-Studios-Food-892.jpg',  'images/Dijo-Studios-Food-893.jpg',
-  'images/Dijo-Studios-Food-895.jpg',  'images/Dijo-Studios-Food-896.jpg',  'images/Dijo-Studios-Food-897.jpg',
-  'images/Dijo-Studios-Food-898.jpg',  'images/Dijo-Studios-Food-899.jpg',  'images/Dijo-Studios-Food-900.jpg',
-  'images/Dijo-Studios-Food-901.jpg',  'images/Dijo-Studios-Food-902.jpg',  'images/Dijo-Studios-Food-903.jpg',
-  'images/Dijo-Studios-Food-904.jpg',  'images/Dijo-Studios-Food-905.jpg',  'images/Dijo-Studios-Food-906.jpg',
-  'images/Dijo-Studios-Food-907.jpg',  'images/Dijo-Studios-Food-908.jpg',  'images/Dijo-Studios-Food-909.jpg',
-  'images/Dijo-Studios-Food-910.jpg',  'images/Dijo-Studios-Food-912.jpg',  'images/Dijo-Studios-Food-913.jpg',
-  'images/Dijo-Studios-Food-914.jpg',  'images/Dijo-Studios-Food-915.jpg',  'images/Dijo-Studios-Food-916.jpg',
-  'images/Dijo-Studios-Food-917.jpg',  'images/Dijo-Studios-Food-918.jpg',  'images/Dijo-Studios-Food-919.jpg',
-  'images/Dijo-Studios-Food-920.jpg',  'images/Dijo-Studios-Food-921.jpg',  'images/Dijo-Studios-Food-922.jpg',
-  'images/Dijo-Studios-Food-924.jpg',  'images/Dijo-Studios-Food-925.jpg',  'images/Dijo-Studios-Food-926.jpg',
-  'images/Dijo-Studios-Food-928.jpg',  'images/Dijo-Studios-Food-929.jpg',  'images/Dijo-Studios-Food-930.jpg',
-  'images/Dijo-Studios-Food-931.jpg',  'images/Dijo-Studios-Food-932.jpg',  'images/Dijo-Studios-Food-933.jpg',
-  'images/Dijo-Studios-Food-934.jpg',  'images/Dijo-Studios-Food-935.jpg',  'images/Dijo-Studios-Food-936.jpg',
-  'images/Dijo-Studios-Food-937.jpg',  'images/Dijo-Studios-Food-938.jpg',  'images/Dijo-Studios-Food-939.jpg',
-  'images/Dijo-Studios-Food-940.jpg',  'images/Dijo-Studios-Food-941.jpg',  'images/Dijo-Studios-Food-942.jpg',
-  'images/Dijo-Studios-Food-943.jpg',  'images/Dijo-Studios-Food-944.jpg',  'images/Dijo-Studios-Food-945.jpg',
-  'images/Dijo-Studios-Food-946.jpg',  'images/Dijo-Studios-Food-947.jpg',  'images/Dijo-Studios-Food-948.jpg',
-  'images/Dijo-Studios-Food-949.jpg'
-];
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function makeCard(src, globalIndex) {
-  const card = document.createElement('div');
-  card.className = 'gallery-card';
-  card.dataset.src = src;
-  card.innerHTML = `<img src="${src}" alt="Dijo Studios Food Photography" loading="lazy"/>
-    <div class="card-overlay">
-      <div class="card-icon">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-      </div>
-      <span class="card-label">View</span>
-    </div>`;
-  card.addEventListener('click', () => {
-    const cards = [...document.querySelectorAll('.gallery-card')];
-    _shuffledImages = cards.map(c => c.dataset.src);
-    // Find this card's position in the full DOM order
-    const domIndex = cards.indexOf(card);
-    openLightbox(domIndex >= 0 ? domIndex : globalIndex);
-  });
-  return card;
-}
-
-function initStaticGallery() {
-  const gallery = document.getElementById('gallery');
-  const featuredRow = document.getElementById('featured-row');
-  if (!gallery || gallery.children.length > 0) return;
-
-  const priority = GALLERY_IMAGES.slice(0, 4);
-  const rest = shuffleArray(GALLERY_IMAGES.slice(4));
-
-  // Featured row — 4 priority images side by side
-  if (featuredRow) {
-    priority.forEach((src, i) => {
-      const card = makeCard(src, i);
-      card.classList.add('featured-card');
-      featuredRow.appendChild(card);
-    });
-  }
-
-  // Main masonry grid — shuffled remainder, indices offset by 4
-  rest.forEach((src, i) => {
-    const card = makeCard(src, i + 4);
-    gallery.appendChild(card);
-  });
-
-  ScrollTrigger.refresh();
-}
-
-/* ═══════════════════════════════════════════════
    IMAGE PROTECTION
 ═══════════════════════════════════════════════ */
 (function protectImages() {
-  // 1. Block right-click context menu on images and gallery cards
   document.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.gallery-card, #lb-img-wrap, #lightbox') || e.target.tagName === 'IMG') {
       e.preventDefault();
       return false;
     }
   });
-
-  // 2. Block drag-to-save on images
   document.addEventListener('dragstart', (e) => {
     if (e.target.tagName === 'IMG') {
       e.preventDefault();
       return false;
     }
   });
-
-  // 3. Block long-press save on iOS / touch devices
   document.addEventListener('touchstart', (e) => {
     if (e.target.tagName === 'IMG') {
       e.target.style.webkitUserSelect = 'none';
       e.target.style.userSelect = 'none';
     }
   });
-
-  // 4. Keyboard shortcut blocks (Ctrl/Cmd+S, Ctrl/Cmd+U, F12 inspector)
   document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     const ctrl = e.ctrlKey || e.metaKey;
