@@ -325,15 +325,14 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
 #lb-img {
   -webkit-user-select: none;
   user-select: none;
-  -webkit-touch-callout: none; /* blocks iOS long-press save sheet */
-  pointer-events: none;        /* prevents drag-to-save */
+  -webkit-touch-callout: none;
+  pointer-events: none;
 }
-/* Restore pointer-events on the card itself so clicks still open the lightbox */
 .gallery-card {
   pointer-events: auto;
 }
 
-/* ── Mobile: hide custom cursor, scrollable lightbox ── */
+/* ── Mobile: hide custom cursor, scrollable lightbox, CENTER IMAGES ── */
 @media (hover: none) and (pointer: coarse) {
   /* Hide the gold dot cursor — irrelevant on touch */
   .cursor-dot { display: none !important; }
@@ -345,25 +344,25 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
     cursor: auto !important;
   }
 
-  /* Lightbox: scroll vertically so tall images aren't cut off */
+  /* Lightbox: center both horizontally AND vertically, allow scroll for tall images */
   #lightbox {
-    align-items: flex-start;
+    align-items: center;
     padding-top: 60px;
     padding-bottom: 80px;
     justify-content: center;
+    overflow-y: auto;
   }
   #lightbox .lb-img-wrap {
     max-height: none;
     max-width: 100vw;
     width: 100%;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
   }
   #lb-img {
     max-height: none;
     max-width: 100vw;
-    /* Landscape images: fit width and centre; portrait: full width */
     width: auto;
     height: auto;
     max-width: 100vw;
@@ -435,6 +434,7 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
     height: 160px;
   }
 }
+
 /* Spotlight headline – two layers, one masked */
 .spotlight-headline {
   position: relative;
@@ -454,10 +454,10 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
   color: var(--highlight);
   background: transparent;
   clip-path: circle(0% at 0% 0%);
-  pointer-events: none;        /* so mouse events pass to the container */
+  pointer-events: none;
   transition: clip-path 0.05s linear;
   z-index: 2;
 }
 .highlight-layer.active {
-  transition: clip-path 0.1s ease-out; /* smooth following */
+  transition: clip-path 0.1s ease-out;
 }
