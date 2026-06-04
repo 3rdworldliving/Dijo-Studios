@@ -226,14 +226,16 @@ function initBarba() {
 
         // Explode rings outwards to cover current page
         const tl = gsap.timeline();
-        tl.to('#page-transition-overlay .layer-bg', { scale: 1, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' })
-          .to('#page-transition-overlay .layer-accent', { scale: 1, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65")
-          .to('#page-transition-overlay .layer-core', { scale: 1, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65");
+        tl.to('#page-transition-overlay .layer-bg', { scale: 1, duration: 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' })
+          .to('#page-transition-overlay .layer-accent', { scale: 1, duration: 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.55")
+          .to('#page-transition-overlay .layer-core', { scale: 1, duration: 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.55")
+          // Set the old container to invisible the precise moment it gets completely covered up by the rings.
+          .set(data.current.container, { opacity: 0 }); 
 
         return tl;
       },
       enter(data) {
-        // Ensure new page is scrolled to top and opacity is visible right away under rings
+        // Ensure new page is scrolled to top and opacity is visible right away underneath the cover rings
         lenis.scrollTo(0, { immediate: true });
         gsap.set(data.next.container, { opacity: 1 });
 
@@ -252,10 +254,10 @@ function initBarba() {
           }
         });
 
-        // Contract the rings inwards revealing the new page
-        tl.to('#page-transition-overlay .layer-core', { scale: 0, duration: 0.9, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "+=0.1")
-          .to('#page-transition-overlay .layer-accent', { scale: 0, duration: 0.9, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.75")
-          .to('#page-transition-overlay .layer-bg', { scale: 0, duration: 0.9, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.75");
+        // Contract the rings inwards revealing the completely new loaded page
+        tl.to('#page-transition-overlay .layer-core', { scale: 0, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "+=0.1")
+          .to('#page-transition-overlay .layer-accent', { scale: 0, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65")
+          .to('#page-transition-overlay .layer-bg', { scale: 0, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65");
 
         return tl;
       }
@@ -608,229 +610,4 @@ function shuffleArray(arr) {
 function makeCard(src, globalIndex) {
   const card = document.createElement('div');
   card.className = 'gallery-card';
-  card.dataset.src = src;
-  card.innerHTML = `<img src="${src}" alt="Dijo Studios Food Photography" loading="lazy"/>
-    <div class="card-overlay">
-      <div class="card-icon">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-      </div>
-      <span class="card-label">View</span>
-    </div>`;
-  card.addEventListener('click', () => {
-    const idx = snakeOrderedCards.indexOf(card);
-    if (idx !== -1) openLightbox(idx);
-    else openLightbox(0);
-  });
-  return card;
-}
-
-let _lbIndex = 0;
-const _isMobile = () => window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-
-function openLightbox(index) {
-  if (!snakeOrderedSrcs.length) return;
-  _lbIndex = Math.min(Math.max(index, 0), snakeOrderedSrcs.length - 1);
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lb-img');
-  const counter = document.getElementById('lb-counter');
-  if (!lb || !img) return;
-  img.src = snakeOrderedSrcs[_lbIndex];
-  if (counter) counter.textContent = `${_lbIndex + 1} / ${snakeOrderedSrcs.length}`;
-  lb.classList.add('open');
-  if (_isMobile()) {
-    lb.style.overflowY = 'auto';
-  } else {
-    document.body.style.overflow = 'hidden';
-  }
-}
-
-function closeLightbox() {
-  const lb = document.getElementById('lightbox');
-  if (lb) { lb.classList.remove('open'); lb.style.overflowY = ''; }
-  document.body.style.overflow = '';
-}
-
-function shiftSlide(dir) {
-  if (!snakeOrderedSrcs.length) return;
-  _lbIndex = (_lbIndex + dir + snakeOrderedSrcs.length) % snakeOrderedSrcs.length;
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lb-img');
-  const counter = document.getElementById('lb-counter');
-  if (!img) return;
-  img.classList.add('switching');
-  setTimeout(() => {
-    img.src = snakeOrderedSrcs[_lbIndex];
-    if (counter) counter.textContent = `${_lbIndex + 1} / ${snakeOrderedSrcs.length}`;
-    img.classList.remove('switching');
-    if (lb && _isMobile()) lb.scrollTop = 0;
-  }, 200);
-}
-
-document.addEventListener('keydown', (e) => {
-  const lb = document.getElementById('lightbox');
-  if (!lb || !lb.classList.contains('open')) return;
-  if (e.key === 'Escape') closeLightbox();
-  if (e.key === 'ArrowLeft') shiftSlide(-1);
-  if (e.key === 'ArrowRight') shiftSlide(1);
-});
-
-(function initLightboxSwipe() {
-  let touchStartX = 0, touchStartY = 0;
-  document.addEventListener('touchstart', (e) => {
-    const lb = document.getElementById('lightbox');
-    if (!lb || !lb.classList.contains('open')) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-  document.addEventListener('touchend', (e) => {
-    const lb = document.getElementById('lightbox');
-    if (!lb || !lb.classList.contains('open')) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-    if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
-      shiftSlide(dx < 0 ? 1 : -1);
-    }
-  }, { passive: true });
-})();
-
-function initStaticGallery() {
-  const gallery = document.getElementById('gallery');
-  const featuredRow = document.getElementById('featured-row');
-  if (!gallery) return;
-  if (gallery.children.length > 0) return;
-
-  const priority = GALLERY_IMAGES.slice(0, 4);
-  const rest = shuffleArray(GALLERY_IMAGES.slice(4));
-
-  if (featuredRow) {
-    priority.forEach((src, i) => {
-      const card = makeCard(src, i);
-      card.classList.add('featured-card');
-      featuredRow.appendChild(card);
-    });
-  }
-
-  rest.forEach((src, i) => {
-    const card = makeCard(src, i + 4);
-    gallery.appendChild(card);
-  });
-
-  setTimeout(() => {
-    const allCards = [...document.querySelectorAll('.gallery-card, .featured-card')];
-    ScrollTrigger.create({
-      trigger: gallery,
-      start: 'top 85%',
-      once: true,
-      onEnter: () => {
-        snakeReveal(allCards);
-      }
-    });
-  }, 100);
-}
-
-/* ═══════════════════════════════════════════════
-   12. UTILITIES
-═══════════════════════════════════════════════ */
-function initNavScramble() {
-  const linksWrap = document.querySelector('.nav-links');
-  if (!linksWrap || window.innerWidth < 768) return;
-  const newWrap = linksWrap.cloneNode(true);
-  linksWrap.parentNode.replaceChild(newWrap, linksWrap);
-  newWrap.querySelectorAll('a').forEach(link => {
-    link.addEventListener('mouseenter', () => { startScramble(link); });
-    link.addEventListener('mouseleave', () => { stopScramble(link); });
-  });
-}
-
-const CHARS_SCRAMBLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-
-function startScramble(el) {
-  const original = el.dataset.original || el.textContent.trim();
-  el.dataset.original = original;
-  const letters = original.split('');
-  if (!el.querySelector('span.letter')) {
-    el.innerHTML = letters.map(ch => ch === ' ' ? ' ' : `<span class="letter" data-char="${ch}">${ch}</span>`).join('');
-  }
-  const spans = el.querySelectorAll('span.letter');
-  spans.forEach((span, i) => {
-    const targetChar = span.dataset.char;
-    let frame = 0;
-    const spins = 4 + i * 2;
-    if (span._interval) clearInterval(span._interval);
-    if (span._timeout) clearTimeout(span._timeout);
-    span._timeout = setTimeout(() => {
-      span._interval = setInterval(() => {
-        if (frame < spins) {
-          span.textContent = CHARS_SCRAMBLE[Math.floor(Math.random() * CHARS_SCRAMBLE.length)];
-          span.style.color = '#D4AF37';
-        } else {
-          clearInterval(span._interval);
-          span.textContent = targetChar;
-          span.style.color = '';
-        }
-        frame++;
-      }, 38);
-    }, i * 30);
-  });
-}
-
-function stopScramble(el) {
-  const spans = el.querySelectorAll('span.letter');
-  spans.forEach(span => {
-    if (span._timeout) clearTimeout(span._timeout);
-    if (span._interval) clearInterval(span._interval);
-    span.textContent = span.dataset.char;
-    span.style.color = '';
-  });
-}
-
-function animateCounters() {
-  const yearsEl = document.getElementById('years-count');
-  const brandsEl = document.getElementById('brands-count');
-  if (!yearsEl || !brandsEl) return;
-  const obj = { years: 0, brands: 0 };
-  ScrollTrigger.create({
-    trigger: yearsEl.closest('.stats'),
-    start: 'top 80%',
-    once: true,
-    onEnter: () => {
-      gsap.to(obj, {
-        years: 5, brands: 25, duration: 2, ease: 'power2.out',
-        onUpdate: () => {
-          yearsEl.textContent = Math.floor(obj.years);
-          brandsEl.textContent = Math.floor(obj.brands);
-        }
-      });
-    }
-  });
-}
-
-/* ── IMAGE PROTECTION ── */
-(function protectImages() {
-  document.addEventListener('contextmenu', (e) => {
-    if (e.target.closest('.gallery-card, #lb-img-wrap, #lightbox') || e.target.tagName === 'IMG') {
-      e.preventDefault();
-      return false;
-    }
-  });
-  document.addEventListener('dragstart', (e) => {
-    if (e.target.tagName === 'IMG') {
-      e.preventDefault();
-      return false;
-    }
-  });
-  document.addEventListener('touchstart', (e) => {
-    if (e.target.tagName === 'IMG') {
-      e.target.style.webkitUserSelect = 'none';
-      e.target.style.userSelect = 'none';
-    }
-  });
-  document.addEventListener('keydown', (e) => {
-    const key = e.key.toLowerCase();
-    const ctrl = e.ctrlKey || e.metaKey;
-    if (ctrl && (key === 's' || key === 'u')) {
-      e.preventDefault();
-      return false;
-    }
-  });
-})();
+  card.dataset.src = src
