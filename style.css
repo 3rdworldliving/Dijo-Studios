@@ -52,9 +52,7 @@ img { max-width: 100%; display: block; }
 /* ── Header & Navigation ── */
 header {
 position: fixed; top: 0; left: 0; width: 100%;
-background: rgba(10,10,10,0.9);
-backdrop-filter: blur(10px);
--webkit-backdrop-filter: blur(10px);  /* Safari support */
+background: rgba(10,10,10,0.9); backdrop-filter: blur(10px);
 border-bottom: 1px solid rgba(255,255,255,0.1);
 z-index: 100; padding: 1rem 0;
 transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), background 0.4s, padding 0.4s;
@@ -227,7 +225,7 @@ text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em;
 /* ── Lightbox ── */
 #lightbox { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s; }
 #lightbox.open { opacity: 1; visibility: visible; }
-.lb-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: zoom-out; }
+.lb-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.94); backdrop-filter: blur(10px); cursor: zoom-out; }
 .lb-img-wrap { position: relative; z-index: 1; max-width: 90vw; max-height: 88vh; display: flex; align-items: center; justify-content: center; transform: scale(0.9); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
 #lightbox.open .lb-img-wrap { transform: scale(1); }
 #lb-img { max-width: 90vw; max-height: 86vh; object-fit: contain; display: block; border-radius: 2px; box-shadow: 0 30px 80px rgba(0,0,0,0.7); transition: opacity 0.25s ease, transform 0.25s ease; }
@@ -256,28 +254,91 @@ footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
 /* ── Scroll Reveal (initial state) ── */
 .reveal-up { opacity: 0; }
 
-/* ── Loading Screen (original text scramble loader) ── */
-#site-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 10000; display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease, visibility 0.6s ease; }
-.loader-text { 
-  font-family: var(--font-heading); font-weight: 900; color: var(--text); 
-  font-size: clamp(3rem, 12vw, 8rem); 
-  line-height: 1.2;
-  text-align: center; 
-  white-space: nowrap;
-  display: inline-block;
-  margin: 0 auto;
+/* ═══════════════════════════════════════════════
+   CINEMATIC CONCENTRIC LOADER STYLES
+═══════════════════════════════════════════════ */
+#site-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: auto;
 }
-.loader-text .lch {
+
+#page-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.loader-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  will-change: transform;
+}
+
+/* Base background layer matching your site dark theme */
+.loader-layer.layer-bg {
+  background: var(--bg);
+  z-index: 1;
+}
+
+/* Premium Gold accent transition ring */
+.loader-layer.layer-accent {
+  background: var(--highlight);
+  z-index: 2;
+}
+
+/* Foreground cover layer */
+.loader-layer.layer-core {
+  background: #141414;
+  z-index: 3;
+}
+
+.loader-content-wrap {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#loader-text {
+  font-family: var(--font-heading);
+  /* Uses broad scalable baseline calculation capped to fill maximum width display safely */
+  font-size: clamp(2rem, 14.5vw, 15rem);
+  font-weight: 900;
+  color: var(--highlight); /* Reverted strictly back to signature Gold */
+  letter-spacing: -0.01em; /* Tighter layout tracking to pull characters together seamlessly */
+  text-transform: uppercase;
+  white-space: nowrap; /* Forces layout to remain on a single structural line */
   display: inline-block;
-  min-width: 0.6em;
+  line-height: 1;
   text-align: center;
-}
-#site-loader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-@media (max-width: 600px) {
-  .loader-text {
-    font-size: clamp(2rem, 8vw, 3.5rem) !important;
-    white-space: nowrap;
-  }
+  transform: scale(0.92); /* Micro scaling adjustment preventing side clippings */
+  transform-origin: center center;
+  width: auto;
 }
 
 /* ── Page transition pop‑up (scale‑in) ── */
@@ -315,7 +376,6 @@ section { min-height: auto; padding: 5rem 0 3rem; }
 display: none; flex-direction: column;
 position: fixed; top: 65px; left: 0; right: 0;
 background: rgba(10,10,10,0.97); backdrop-filter: blur(10px);
--webkit-backdrop-filter: blur(10px);
 padding: 1.5rem 2rem; gap: 1.5rem;
 border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
 }
@@ -337,12 +397,17 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
 
 /* ── Mobile: hide custom cursor, scrollable lightbox, CENTER IMAGES ── */
 @media (hover: none) and (pointer: coarse) {
+  /* Hide the gold dot cursor — irrelevant on touch */
   .cursor-dot { display: none !important; }
+
+  /* Restore default cursor on all elements */
   html, body, *, a, button, .btn, input, textarea, select,
   .gallery-card, .nav-links a, .logo-container, .brand-tag,
   .upload-zone, .clear-btn, [role="button"] {
     cursor: auto !important;
   }
+
+  /* Lightbox: center both horizontally AND vertically, allow scroll for tall images */
   #lightbox {
     align-items: center;
     padding-top: 60px;
@@ -369,6 +434,7 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
     border-radius: 12px;
     display: block;
   }
+  /* Prev/next arrows bigger & easier to tap */
   .lb-prev, .lb-next {
     width: 40px;
     height: 40px;
