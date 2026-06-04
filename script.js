@@ -39,32 +39,45 @@ function attachCursorHoverEvents() {
 }
 
 /* ═══════════════════════════════════════════════
-   3. LOADER
+   3. CINEMATIC CONCENTRIC EXPLODING LOADER
 ═══════════════════════════════════════════════ */
 function initLoader(onComplete) {
-  lenis.stop();
+  // Pause the smooth scrolling system during the animation
+  if (typeof lenis !== 'undefined') lenis.stop();
+  
+  // Create the visual elements on your page automatically
   const loader = document.createElement('div');
   loader.id = 'site-loader';
-  loader.innerHTML = '<span class="loader-text" id="loader-text">Dijo Studios</span>';
+  loader.innerHTML = `
+    <div class="loader-layer layer-bg"></div>
+    <div class="loader-layer layer-accent"></div>
+    <div class="loader-layer layer-core"></div>
+    <div class="loader-content-wrap">
+      <span id="loader-text">DIJO STUDIOS</span>
+    </div>
+  `;
   document.body.prepend(loader);
   document.body.style.overflow = 'hidden';
+
   const txt = document.getElementById('loader-text');
-  const pulseAnim = gsap.to(txt, {
-    color: '#D4AF37',
-    textShadow: '0 0 35px rgba(212,175,55,0.5)',
-    duration: 0.7, repeat: -1, yoyo: true, ease: 'power1.inOut'
-  });
   const TARGET = 'DIJO STUDIOS';
   const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-  const FRAME_MS = 80, STAGGER = 120, SPINS = 12;
+  const FRAME_MS = 70, STAGGER = 90, SPINS = 10;
+
+  // Split your text into individual letters for the slot-machine scramble effect
   txt.innerHTML = TARGET.split('').map(ch =>
     ch === ' '
       ? '<span class="lch" style="display:inline-block;width:0.35em">&nbsp;</span>'
       : `<span class="lch" data-final="${ch}">${ch}</span>`
   ).join('');
+
   const letterSpans = txt.querySelectorAll('span.lch[data-final]');
   let lettersLanded = 0;
-  gsap.from(txt, { opacity: 0, scale: 0.92, duration: 0.5, ease: 'power2.out' });
+
+  // Smooth text fade in
+  gsap.fromTo(txt, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' });
+
+  // Run the premium text scrambling slot-machine effect
   letterSpans.forEach((span, i) => {
     const finalChar = span.dataset.final;
     let frame = 0;
@@ -72,44 +85,68 @@ function initLoader(onComplete) {
       const iv = setInterval(() => {
         if (frame < SPINS) {
           span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
+          span.style.color = 'var(--highlight)'; // Retain gold accent color during the random frame cycle
         } else {
           clearInterval(iv);
           span.textContent = finalChar;
+          span.style.color = ''; // Returns to base css class color rule (var(--highlight))
           lettersLanded++;
+          
+          // When all letters finish scrambling, trigger the ring explosion reveal
           if (lettersLanded === letterSpans.length) {
             setTimeout(() => {
-              pulseAnim.kill();
-              gsap.to(loader, {
-                opacity: 0, duration: 0.6, ease: 'power2.inOut',
-                onComplete: () => {
-                  loader.remove();
-                  document.body.style.overflow = '';
-                  lenis.start();
-                  if (onComplete) onComplete();
-                }
-              });
-              loader.classList.add('hide');
-            }, 1500);
+              triggerExplosionReveal();
+            }, 1000);
           }
         }
         frame++;
       }, FRAME_MS);
     }, i * STAGGER);
   });
-  setTimeout(() => {
-    if (!loader.parentNode || loader.classList.contains('hide')) return;
-    pulseAnim.kill();
-    gsap.to(loader, {
-      opacity: 0, duration: 0.6, ease: 'power2.inOut',
+
+  // Smoothly expand the concentric color circles outward to reveal the page
+  function triggerExplosionReveal() {
+    gsap.to(txt, {
+      opacity: 0,
+      scale: 1.05,
+      duration: 0.4,
+      ease: 'power2.inOut'
+    });
+
+    const tl = gsap.timeline({
       onComplete: () => {
         loader.remove();
         document.body.style.overflow = '';
-        lenis.start();
+        if (typeof lenis !== 'undefined') lenis.start(); // Turn smooth scrolling back on
         if (onComplete) onComplete();
       }
     });
-    loader.classList.add('hide');
-  }, 10000);
+
+    tl.to('.layer-core', {
+      scale: 0,
+      duration: 1.1,
+      ease: 'cubic-bezier(0.85, 0, 0.15, 1)'
+    }, "+=0.1")
+    .to('.layer-accent', {
+      scale: 0,
+      duration: 1.1,
+      ease: 'cubic-bezier(0.85, 0, 0.15, 1)'
+    }, "-=0.95")
+    .to('.layer-bg', {
+      scale: 0,
+      duration: 1.1,
+      ease: 'cubic-bezier(0.85, 0, 0.15, 1)'
+    }, "-=0.95");
+  }
+
+  // Safety backup timer to make sure your site always reveals even if an error occurs
+  setTimeout(() => {
+    if (!loader.parentNode) return;
+    loader.remove();
+    document.body.style.overflow = '';
+    if (typeof lenis !== 'undefined') lenis.start();
+    if (onComplete) onComplete();
+  }, 9000);
 }
 
 /* ═══════════════════════════════════════════════
@@ -172,33 +209,55 @@ function initBarba() {
   barba.init({
     prevent: ({ el }) => el.closest('.logo-container') !== null,
     transitions: [{
-      name: 'fade-transition',
+      name: 'ring-transition',
       leave(data) {
-        return gsap.to(data.current.container, {
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power2.inOut'
-        });
+        // Create transition layer wrapper
+        const overlay = document.createElement('div');
+        overlay.id = 'page-transition-overlay';
+        overlay.innerHTML = `
+          <div class="loader-layer layer-bg"></div>
+          <div class="loader-layer layer-accent"></div>
+          <div class="loader-layer layer-core"></div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Start rings small
+        gsap.set('#page-transition-overlay .loader-layer', { scale: 0 });
+
+        // Explode rings outwards to cover current page
+        const tl = gsap.timeline();
+        tl.to('#page-transition-overlay .layer-bg', { scale: 1, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' })
+          .to('#page-transition-overlay .layer-accent', { scale: 1, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65")
+          .to('#page-transition-overlay .layer-core', { scale: 1, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65");
+
+        return tl;
       },
       enter(data) {
+        // Ensure new page is scrolled to top and opacity is visible right away under rings
         lenis.scrollTo(0, { immediate: true });
-        gsap.set(data.next.container, { opacity: 0 });
-        return gsap.fromTo(data.next.container,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration: 0.2,
-            ease: 'power2.out',
-            onComplete: () => {
-              initPageSpecifics(data.next.namespace);
-              const wrapper = data.next.container;
-              if (wrapper) wrapper.classList.add('new-page');
-              setTimeout(() => {
-                if (wrapper) wrapper.classList.remove('new-page');
-              }, 800);
-            }
+        gsap.set(data.next.container, { opacity: 1 });
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            // Cleanup DOM and trigger specific page animations
+            const overlay = document.getElementById('page-transition-overlay');
+            if (overlay) overlay.remove();
+            
+            initPageSpecifics(data.next.namespace);
+            const wrapper = data.next.container;
+            if (wrapper) wrapper.classList.add('new-page');
+            setTimeout(() => {
+              if (wrapper) wrapper.classList.remove('new-page');
+            }, 800);
           }
-        );
+        });
+
+        // Contract the rings inwards revealing the new page
+        tl.to('#page-transition-overlay .layer-core', { scale: 0, duration: 0.9, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "+=0.1")
+          .to('#page-transition-overlay .layer-accent', { scale: 0, duration: 0.9, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.75")
+          .to('#page-transition-overlay .layer-bg', { scale: 0, duration: 0.9, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.75");
+
+        return tl;
       }
     }]
   });
@@ -746,9 +805,7 @@ function animateCounters() {
   });
 }
 
-/* ═══════════════════════════════════════════════
-   IMAGE PROTECTION
-═══════════════════════════════════════════════ */
+/* ── IMAGE PROTECTION ── */
 (function protectImages() {
   document.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.gallery-card, #lb-img-wrap, #lightbox') || e.target.tagName === 'IMG') {
