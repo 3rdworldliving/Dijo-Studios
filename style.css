@@ -520,3 +520,19 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
 .highlight-layer.active {
   transition: clip-path 0.1s ease-out;
 }
+/* ── Safari-specific Cursor Fix ── */
+/* Detects Safari browsers and reverts cursor to default */
+@media not all and (min-resolution:.001dpcm) { 
+  @supports (-webkit-appearance:none) {
+    html, body, *, 
+    a, button, .btn, input, textarea, select, 
+    .gallery-card, .nav-links a, .logo-container, .brand-tag, 
+    .upload-zone, .clear-btn, [role="button"] {
+      cursor: auto !important;
+    }
+    
+    .cursor-dot {
+      display: none !important;
+    }
+  }
+}
