@@ -209,57 +209,62 @@ function initBarba() {
   barba.init({
     prevent: ({ el }) => el.closest('.logo-container') !== null,
     transitions: [{
-      name: 'ring-transition',
+      name: 'svg-burst-transition',
+
       leave(data) {
-        // Create transition layer wrapper
-        const overlay = document.createElement('div');
-        overlay.id = 'page-transition-overlay';
-        overlay.innerHTML = `
-          <div class="loader-layer layer-bg"></div>
-          <div class="loader-layer layer-accent"></div>
-          <div class="loader-layer layer-core"></div>
-        `;
-        document.body.appendChild(overlay);
+        return new Promise(resolve => {
+          // Build the SVG burst overlay
+          const overlay = document.createElement('div');
+          overlay.id = 'pt-overlay';
+          overlay.innerHTML = `
+            <div class="pt-svg-wrap">
+              <svg viewBox="0 0 100 100" overflow="visible" xmlns="http://www.w3.org/2000/svg">
+                <g class="pt-core"><circle cx="50" cy="50" r="1" fill="none"/></g>
+                <g class="pt-spinner"><circle cx="50" cy="50" r="20" fill="none"/></g>
+                <g class="pt-l pt-l1"><circle cx="50" cy="50" r="70"  fill="none"/></g>
+                <g class="pt-l pt-l2"><circle cx="50" cy="50" r="120" fill="none"/></g>
+                <g class="pt-l pt-l3"><circle cx="50" cy="50" r="180" fill="none"/></g>
+                <g class="pt-l pt-l4"><circle cx="50" cy="50" r="240" fill="none"/></g>
+                <g class="pt-l pt-l5"><circle cx="50" cy="50" r="300" fill="none"/></g>
+                <g class="pt-l pt-l6"><circle cx="50" cy="50" r="380" fill="none"/></g>
+                <g class="pt-l pt-l7"><circle cx="50" cy="50" r="450" fill="none"/></g>
+                <g class="pt-l pt-l8"><circle cx="50" cy="50" r="540" fill="none"/></g>
+              </svg>
+            </div>`;
+          document.body.appendChild(overlay);
 
-        // Start rings small
-        gsap.set('#page-transition-overlay .loader-layer', { scale: 0 });
-
-        // Explode rings outwards to cover current page
-        const tl = gsap.timeline();
-        tl.to('#page-transition-overlay .layer-bg', { scale: 1, duration: 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' })
-          .to('#page-transition-overlay .layer-accent', { scale: 1, duration: 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.55")
-          .to('#page-transition-overlay .layer-core', { scale: 1, duration: 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.55")
-          // Set the old container to invisible the precise moment it gets completely covered up by the rings.
-          .set(data.current.container, { opacity: 0 }); 
-
-        return tl;
-      },
-      enter(data) {
-        // Ensure new page is scrolled to top and opacity is visible right away underneath the cover rings
-        lenis.scrollTo(0, { immediate: true });
-        gsap.set(data.next.container, { opacity: 1 });
-
-        const tl = gsap.timeline({
-          onComplete: () => {
-            // Cleanup DOM and trigger specific page animations
-            const overlay = document.getElementById('page-transition-overlay');
-            if (overlay) overlay.remove();
-            
-            initPageSpecifics(data.next.namespace);
-            const wrapper = data.next.container;
-            if (wrapper) wrapper.classList.add('new-page');
-            setTimeout(() => {
-              if (wrapper) wrapper.classList.remove('new-page');
-            }, 800);
-          }
+          // Fade overlay in then trigger SVG burst
+          gsap.to(overlay, { opacity: 1, duration: 0.2, ease: 'none',
+            onComplete: () => {
+              overlay.classList.add('pt-loaded');
+              // Hide old page once core has fully expanded (~0.45s into the 1.8s core anim)
+              setTimeout(() => {
+                gsap.set(data.current.container, { opacity: 0 });
+                resolve();
+              }, 450);
+            }
+          });
         });
+      },
 
-        // Contract the rings inwards revealing the completely new loaded page
-        tl.to('#page-transition-overlay .layer-core', { scale: 0, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "+=0.1")
-          .to('#page-transition-overlay .layer-accent', { scale: 0, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65")
-          .to('#page-transition-overlay .layer-bg', { scale: 0, duration: 0.8, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }, "-=0.65");
+      enter(data) {
+        return new Promise(resolve => {
+          lenis.scrollTo(0, { immediate: true });
+          gsap.set(data.next.container, { opacity: 1 });
 
-        return tl;
+          const overlay = document.getElementById('pt-overlay');
+
+          // Wait for core gold fill to fade out (~1.8s total), then reveal new page
+          setTimeout(() => {
+            gsap.to(overlay, { opacity: 0, duration: 0.4, ease: 'power2.in',
+              onComplete: () => {
+                overlay.remove();
+                initPageSpecifics(data.next.namespace);
+                resolve();
+              }
+            });
+          }, 1400);
+        });
       }
     }]
   });
