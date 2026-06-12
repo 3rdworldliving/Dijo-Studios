@@ -251,7 +251,192 @@ footer { padding: 4rem 0; text-align: center; border-top: 1px solid rgba(255,255
 footer a { color: var(--highlight); margin: 0 0.5rem; transition: all 0.3s ease; display: inline-block; }
 footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
 
-/* ── Scroll Reveal (initial state) ── */
+/* ═══════════════════════════════════════════════
+   SVG BURST PAGE TRANSITION
+   Adapted from codepen.io/ARS — restyled for
+   Dijo Studios dark/gold palette. SCSS converted
+   to plain CSS, compass mixins expanded.
+   $major=#d4af37 (gold), $minor=rgba(212,175,55,x)
+   $dur = 0.9s, $pi2 = 6.28
+═══════════════════════════════════════════════ */
+
+/* ── Overlay container ── */
+#pt-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 8500;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#pt-overlay.pt-loaded { pointer-events: all; }
+
+/* ── SVG centred and allowed to overflow ── */
+.pt-svg-wrap {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px; height: 100px;
+  overflow: visible;
+}
+.pt-svg-wrap svg {
+  width: 100px; height: 100px;
+  overflow: visible;
+}
+.pt-svg-wrap g,
+.pt-svg-wrap circle { transform-origin: 50px 50px; }
+
+/* ── Spinner ── */
+.pt-spinner {
+  animation: pt-rotate 0.9s linear infinite;
+}
+.pt-spinner > circle {
+  stroke: #d4af37;
+  stroke-width: 6;
+  stroke-dasharray: 157;
+  stroke-dashoffset: 157;
+  fill: none;
+  animation: pt-spinner-anim 0.9s both infinite ease-in-out;
+}
+#pt-overlay.pt-loaded .pt-spinner { opacity: 0; transition: opacity 0.1s 0.1s; }
+
+@keyframes pt-rotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(270deg); }
+}
+@keyframes pt-spinner-anim {
+  0%   { stroke-dasharray: 157; stroke-dashoffset: 157; }
+  65%  { stroke-dasharray: 157; stroke-dashoffset: 39; transform: rotate(135deg); }
+  100% { stroke-dasharray: 157; stroke-dashoffset: 157; transform: rotate(450deg); }
+}
+
+/* ── Core: gold fills the entire screen ── */
+.pt-core > circle { fill: #d4af37; visibility: hidden; }
+#pt-overlay.pt-loaded .pt-core > circle {
+  animation: pt-core-loaded 1.8s ease-in-out forwards;
+}
+@keyframes pt-core-loaded {
+  0%       { visibility: hidden; transform: scale(1); opacity: 1; }
+  25%, 85% { visibility: visible; transform: scale(1000); opacity: 1; }
+  100%     { transform: scale(1000); opacity: 0; }
+}
+
+/* ── Layer paths: default hidden ── */
+.pt-l > circle { visibility: hidden; fill: none; }
+
+/* ── Layer 1: r=70, c=1507.2, angle=-30, w=15, rgba(212,175,55,.5) ── */
+.pt-l1 > circle {
+  stroke: rgba(212,175,55,.5); stroke-width: 15;
+  stroke-dasharray: 1507.2; stroke-dashoffset: 1507.2;
+  transform: rotate(-30deg);
+}
+#pt-overlay.pt-loaded .pt-l1 > circle { visibility: visible; animation: pt-l1 0.9s ease-in forwards; }
+@keyframes pt-l1 {
+  0%   { stroke-dasharray: 1507.2; stroke-dashoffset: 1507.2; stroke-width: 15; }
+  75%  { stroke-dashoffset: 753.6; stroke-width: 15; }
+  100% { stroke: rgba(212,175,55,.5); stroke-width: 225;
+         stroke-dasharray: 1513.5; stroke-dashoffset: 0; transform: rotate(450deg); }
+}
+
+/* ── Layer 2: r=120, c=1507.2, angle=-60, w=20, rgba(212,175,55,.3) ── */
+.pt-l2 > circle {
+  stroke: rgba(212,175,55,.3); stroke-width: 20;
+  stroke-dasharray: 1507.2; stroke-dashoffset: 1507.2;
+  transform: rotate(-60deg);
+}
+#pt-overlay.pt-loaded .pt-l2 > circle { visibility: visible; animation: pt-l2 0.9s ease-in forwards; }
+@keyframes pt-l2 {
+  0%   { stroke-dasharray: 1507.2; stroke-dashoffset: 1507.2; stroke-width: 20; }
+  75%  { stroke-dashoffset: 753.6; stroke-width: 20; }
+  100% { stroke: rgba(212,175,55,.3); stroke-width: 60;
+         stroke-dasharray: 1513.5; stroke-dashoffset: 0; transform: rotate(420deg); }
+}
+
+/* ── Layer 3: r=180, c=1130.4, angle=-70, w=40, rgba(212,175,55,.8) ── */
+.pt-l3 > circle {
+  stroke: rgba(212,175,55,.8); stroke-width: 40;
+  stroke-dasharray: 1130.4; stroke-dashoffset: 1130.4;
+  transform: rotate(-70deg);
+}
+#pt-overlay.pt-loaded .pt-l3 > circle { visibility: visible; animation: pt-l3 0.9s ease-in forwards; }
+@keyframes pt-l3 {
+  0%   { stroke-dasharray: 1130.4; stroke-dashoffset: 1130.4; stroke-width: 40; }
+  75%  { stroke-dashoffset: 565.2; stroke-width: 40; }
+  100% { stroke: rgba(212,175,55,.8); stroke-width: 120;
+         stroke-dasharray: 1136.7; stroke-dashoffset: 0; transform: rotate(410deg); }
+}
+
+/* ── Layer 4: r=240, c=1507.2, angle=-90, w=20, rgba(212,175,55,.6) ── */
+.pt-l4 > circle {
+  stroke: rgba(212,175,55,.6); stroke-width: 20;
+  stroke-dasharray: 1507.2; stroke-dashoffset: 1507.2;
+  transform: rotate(-90deg);
+}
+#pt-overlay.pt-loaded .pt-l4 > circle { visibility: visible; animation: pt-l4 0.9s ease-in forwards; }
+@keyframes pt-l4 {
+  0%   { stroke-dasharray: 1507.2; stroke-dashoffset: 1507.2; stroke-width: 20; }
+  75%  { stroke-dashoffset: 753.6; stroke-width: 20; }
+  100% { stroke: rgba(212,175,55,.6); stroke-width: 60;
+         stroke-dasharray: 1513.5; stroke-dashoffset: 0; transform: rotate(390deg); }
+}
+
+/* ── Layer 5: r=300, c=1884, angle=-20, w=30, rgba(212,175,55,.5) ── */
+.pt-l5 > circle {
+  stroke: rgba(212,175,55,.5); stroke-width: 30;
+  stroke-dasharray: 1884; stroke-dashoffset: 1884;
+  transform: rotate(-20deg);
+}
+#pt-overlay.pt-loaded .pt-l5 > circle { visibility: visible; animation: pt-l5 0.9s ease-in forwards; }
+@keyframes pt-l5 {
+  0%   { stroke-dasharray: 1884; stroke-dashoffset: 1884; stroke-width: 30; }
+  75%  { stroke-dashoffset: 942; stroke-width: 30; }
+  100% { stroke: rgba(212,175,55,.5); stroke-width: 90;
+         stroke-dasharray: 1890.3; stroke-dashoffset: 0; transform: rotate(460deg); }
+}
+
+/* ── Layer 6: r=380, c=2386.4, angle=-80, w=45, rgba(212,175,55,.2) ── */
+.pt-l6 > circle {
+  stroke: rgba(212,175,55,.2); stroke-width: 45;
+  stroke-dasharray: 2386.4; stroke-dashoffset: 2386.4;
+  transform: rotate(-80deg);
+}
+#pt-overlay.pt-loaded .pt-l6 > circle { visibility: visible; animation: pt-l6 0.9s ease-in forwards; }
+@keyframes pt-l6 {
+  0%   { stroke-dasharray: 2386.4; stroke-dashoffset: 2386.4; stroke-width: 45; }
+  75%  { stroke-dashoffset: 1193.2; stroke-width: 45; }
+  100% { stroke: rgba(212,175,55,.2); stroke-width: 135;
+         stroke-dasharray: 2392.7; stroke-dashoffset: 0; transform: rotate(400deg); }
+}
+
+/* ── Layer 7: r=450, c=2826, angle=-10, w=75, rgba(212,175,55,1) ── */
+.pt-l7 > circle {
+  stroke: rgba(212,175,55,1); stroke-width: 75;
+  stroke-dasharray: 2826; stroke-dashoffset: 2826;
+  transform: rotate(-10deg);
+}
+#pt-overlay.pt-loaded .pt-l7 > circle { visibility: visible; animation: pt-l7 0.9s ease-in forwards; }
+@keyframes pt-l7 {
+  0%   { stroke-dasharray: 2826; stroke-dashoffset: 2826; stroke-width: 75; }
+  75%  { stroke-dashoffset: 1413; stroke-width: 75; }
+  100% { stroke: rgba(212,175,55,1); stroke-width: 225;
+         stroke-dasharray: 2832.3; stroke-dashoffset: 0; transform: rotate(470deg); }
+}
+
+/* ── Layer 8: r=540, c=3391.2, angle=-70, w=250, rgba(212,175,55,.5) ── */
+.pt-l8 > circle {
+  stroke: rgba(212,175,55,.5); stroke-width: 250;
+  stroke-dasharray: 3391.2; stroke-dashoffset: 3391.2;
+  transform: rotate(-70deg);
+}
+#pt-overlay.pt-loaded .pt-l8 > circle { visibility: visible; animation: pt-l8 0.9s ease-in forwards; }
+@keyframes pt-l8 {
+  0%   { stroke-dasharray: 3391.2; stroke-dashoffset: 3391.2; stroke-width: 250; }
+  75%  { stroke-dashoffset: 1695.6; stroke-width: 250; }
+  100% { stroke: rgba(212,175,55,.5); stroke-width: 750;
+         stroke-dasharray: 3397.5; stroke-dashoffset: 0; transform: rotate(410deg); }
+}
+
+/* ── Scroll Reveal (initial state — GSAP animates from here) ── */
 .reveal-up { opacity: 0; }
 
 /* ═══════════════════════════════════════════════
@@ -519,20 +704,4 @@ border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 99;
 }
 .highlight-layer.active {
   transition: clip-path 0.1s ease-out;
-}
-/* ── Safari-specific Cursor Fix ── */
-/* Detects Safari browsers and reverts cursor to default */
-@media not all and (min-resolution:.001dpcm) { 
-  @supports (-webkit-appearance:none) {
-    html, body, *, 
-    a, button, .btn, input, textarea, select, 
-    .gallery-card, .nav-links a, .logo-container, .brand-tag, 
-    .upload-zone, .clear-btn, [role="button"] {
-      cursor: auto !important;
-    }
-    
-    .cursor-dot {
-      display: none !important;
-    }
-  }
 }
