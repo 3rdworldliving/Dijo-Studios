@@ -206,65 +206,189 @@ function initGlobalEvents() {
    5. BARBA TRANSITIONS
 ═══════════════════════════════════════════════ */
 function initBarba() {
+
+  // ── Create a single persistent overlay (injected once, reused every transition) ──
+  const overlay = document.createElement('div');
+  overlay.id = 'pt-overlay';
+  overlay.innerHTML = `
+    <div class="pt-svg-wrap">
+      <svg viewBox="0 0 100 100" overflow="visible" xmlns="http://www.w3.org/2000/svg">
+        <g class="pt-core"><circle cx="50" cy="50" r="1" fill="none"/></g>
+        <g class="pt-spinner"><circle cx="50" cy="50" r="20" fill="none"/></g>
+        <g class="pt-l pt-l1"><circle cx="50" cy="50" r="70"  fill="none"/></g>
+        <g class="pt-l pt-l2"><circle cx="50" cy="50" r="120" fill="none"/></g>
+        <g class="pt-l pt-l3"><circle cx="50" cy="50" r="180" fill="none"/></g>
+        <g class="pt-l pt-l4"><circle cx="50" cy="50" r="240" fill="none"/></g>
+        <g class="pt-l pt-l5"><circle cx="50" cy="50" r="300" fill="none"/></g>
+        <g class="pt-l pt-l6"><circle cx="50" cy="50" r="380" fill="none"/></g>
+        <g class="pt-l pt-l7"><circle cx="50" cy="50" r="450" fill="none"/></g>
+        <g class="pt-l pt-l8"><circle cx="50" cy="50" r="540" fill="none"/></g>
+      </svg>
+    </div>`;
+  gsap.set(overlay, { opacity: 0, pointerEvents: 'none' });
+  document.body.appendChild(overlay);
+
+  // Cache SVG elements for GSAP (faster than querying each time)
+  const svgWrap   = overlay.querySelector('.pt-svg-wrap');
+  const core      = overlay.querySelector('.pt-core circle');
+  const spinner   = overlay.querySelector('.pt-spinner');
+  const spinCirc  = overlay.querySelector('.pt-spinner circle');
+  const layers    = [...overlay.querySelectorAll('.pt-l circle')];
+
+  // Layer config: [startAngle, strokeWidth, strokeColor]
+  const layerConfig = [
+    [-30,  15, 'rgba(212,175,55,0.5)'],
+    [-60,  20, 'rgba(212,175,55,0.3)'],
+    [-70,  40, 'rgba(212,175,55,0.8)'],
+    [-90,  20, 'rgba(212,175,55,0.6)'],
+    [-20,  30, 'rgba(212,175,55,0.5)'],
+    [-80,  45, 'rgba(212,175,55,0.2)'],
+    [-10,  75, 'rgba(212,175,55,1.0)'],
+    [-70, 250, 'rgba(212,175,55,0.5)'],
+  ];
+
+  // Pre-set all layer styles (runs once)
+  layers.forEach((circle, i) => {
+    const [angle, width, color] = layerConfig[i];
+    const c = parseFloat(circle.getAttribute('r')) * 2 * Math.PI;
+    gsap.set(circle, {
+      stroke:          color,
+      strokeWidth:     width,
+      strokeDasharray: c,
+      strokeDashoffset: c,
+      rotation:        angle,
+      svgOrigin:       '50 50',
+      visibility:      'hidden',
+      fill:            'none',
+    });
+  });
+
+  // Pre-set spinner
+  const spinC = 2 * Math.PI * 20;
+  gsap.set(spinCirc, {
+    stroke: '#d4af37', strokeWidth: 6,
+    strokeDasharray: spinC, strokeDashoffset: spinC,
+    fill: 'none',
+  });
+  gsap.set(spinner, { rotation: 0, svgOrigin: '50 50' });
+
+  // Pre-set core
+  gsap.set(core, { fill: '#d4af37', scale: 0, svgOrigin: '50 50', opacity: 0 });
+
+  // ─── Build a reusable GSAP timeline for the burst ───────────────────────────
+  function buildBurstTimeline() {
+    const tl = gsap.timeline({ paused: true });
+
+    // Spinner runs while burst builds
+    tl.to(spinner, { rotation: 270, duration: 0.9, ease: 'none', svgOrigin: '50 50' }, 0);
+    tl.fromTo(spinCirc,
+      { strokeDashoffset: spinC },
+      { strokeDashoffset: spinC * 0.25, duration: 0.6, ease: 'power2.inOut' }, 0);
+
+    // All 8 rings draw in simultaneously with stagger
+    layers.forEach((circle, i) => {
+      const c = parseFloat(circle.getAttribute('r')) * 2 * Math.PI;
+      const [startAngle,, ] = layerConfig[i];
+      tl.set(circle, { visibility: 'visible' }, 0);
+      tl.to(circle, {
+        strokeDashoffset: 0,
+        rotation:         startAngle + 480,
+        strokeWidth:      `*=3`,
+        svgOrigin:        '50 50',
+        duration:         0.9,
+        ease:             'power2.in',
+      }, i * 0.02); // tiny stagger
+    });
+
+    // Core explodes outward — fills entire viewport with gold
+    tl.set(core, { opacity: 1 }, 0.35);
+    tl.to(core, {
+      scale:    900,
+      duration: 0.55,
+      ease:     'power3.in',
+      svgOrigin: '50 50',
+    }, 0.35);
+
+    return tl;
+  }
+
+  // ─── Build a reusable GSAP timeline for the collapse ───────────────────────
+  function buildCollapseTimeline() {
+    const tl = gsap.timeline({ paused: true });
+    tl.to(core, {
+      opacity:  0,
+      duration: 0.5,
+      ease:     'power2.out',
+    }, 0);
+    return tl;
+  }
+
+  // ─── Reset overlay back to initial state ────────────────────────────────────
+  function resetOverlay() {
+    layers.forEach((circle, i) => {
+      const c = parseFloat(circle.getAttribute('r')) * 2 * Math.PI;
+      const [angle, width] = layerConfig[i];
+      gsap.set(circle, {
+        strokeDashoffset: c,
+        rotation:         angle,
+        strokeWidth:      width,
+        visibility:       'hidden',
+      });
+    });
+    gsap.set(core,     { scale: 0, opacity: 0 });
+    gsap.set(spinner,  { rotation: 0 });
+    gsap.set(spinCirc, { strokeDashoffset: spinC });
+  }
+
+  // ─── Barba.js init ──────────────────────────────────────────────────────────
   barba.init({
     prevent: ({ el }) => el.closest('.logo-container') !== null,
+    // sync: true ensures LEAVE fully completes before ENTER begins
+    sync: true,
     transitions: [{
       name: 'svg-burst-transition',
 
-      leave(data) {
-        return new Promise(resolve => {
-          // Build the SVG burst overlay
-          const overlay = document.createElement('div');
-          overlay.id = 'pt-overlay';
-          overlay.innerHTML = `
-            <div class="pt-svg-wrap">
-              <svg viewBox="0 0 100 100" overflow="visible" xmlns="http://www.w3.org/2000/svg">
-                <g class="pt-core"><circle cx="50" cy="50" r="1" fill="none"/></g>
-                <g class="pt-spinner"><circle cx="50" cy="50" r="20" fill="none"/></g>
-                <g class="pt-l pt-l1"><circle cx="50" cy="50" r="70"  fill="none"/></g>
-                <g class="pt-l pt-l2"><circle cx="50" cy="50" r="120" fill="none"/></g>
-                <g class="pt-l pt-l3"><circle cx="50" cy="50" r="180" fill="none"/></g>
-                <g class="pt-l pt-l4"><circle cx="50" cy="50" r="240" fill="none"/></g>
-                <g class="pt-l pt-l5"><circle cx="50" cy="50" r="300" fill="none"/></g>
-                <g class="pt-l pt-l6"><circle cx="50" cy="50" r="380" fill="none"/></g>
-                <g class="pt-l pt-l7"><circle cx="50" cy="50" r="450" fill="none"/></g>
-                <g class="pt-l pt-l8"><circle cx="50" cy="50" r="540" fill="none"/></g>
-              </svg>
-            </div>`;
-          document.body.appendChild(overlay);
+      async leave(data) {
+        // 1. Hide old page immediately (it sits under overlay)
+        gsap.set(data.current.container, { opacity: 0 });
 
-          // Fade overlay in then trigger SVG burst
-          gsap.to(overlay, { opacity: 1, duration: 0.2, ease: 'none',
-            onComplete: () => {
-              overlay.classList.add('pt-loaded');
-              // Hide old page once core has fully expanded (~0.45s into the 1.8s core anim)
-              setTimeout(() => {
-                gsap.set(data.current.container, { opacity: 0 });
-                resolve();
-              }, 450);
-            }
-          });
+        // 2. Show overlay
+        await gsap.to(overlay, {
+          opacity: 1, pointerEvents: 'all',
+          duration: 0.15, ease: 'none'
         });
+
+        // 3. Run burst animation
+        const burst = buildBurstTimeline();
+        await burst.play();
       },
 
-      enter(data) {
-        return new Promise(resolve => {
-          lenis.scrollTo(0, { immediate: true });
-          gsap.set(data.next.container, { opacity: 1 });
+      async enter(data) {
+        // 4. New page starts hidden under the gold fill
+        gsap.set(data.next.container, { opacity: 0 });
+        lenis.scrollTo(0, { immediate: true });
 
-          const overlay = document.getElementById('pt-overlay');
+        // 5. Collapse the gold core, revealing new page
+        const collapse = buildCollapseTimeline();
+        collapse.play();
 
-          // Wait for core gold fill to fade out (~1.8s total), then reveal new page
-          setTimeout(() => {
-            gsap.to(overlay, { opacity: 0, duration: 0.4, ease: 'power2.in',
-              onComplete: () => {
-                overlay.remove();
-                initPageSpecifics(data.next.namespace);
-                resolve();
-              }
-            });
-          }, 1400);
+        // 6. Fade in new page as core fades out
+        await gsap.to(data.next.container, {
+          opacity:  1,
+          duration: 0.5,
+          ease:     'power2.out',
+          delay:    0.15,
         });
+
+        // 7. Hide overlay and reset for next transition
+        await gsap.to(overlay, {
+          opacity: 0, pointerEvents: 'none',
+          duration: 0.2, ease: 'none'
+        });
+        resetOverlay();
+
+        // 8. Fire page-specific animations
+        initPageSpecifics(data.next.namespace);
       }
     }]
   });
