@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.dijostudios.co.za/sitemap.xml
