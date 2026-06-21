@@ -1,0 +1,16 @@
+{
+  "name": "Dijo Studios — Food Photographer Johannesburg",
+  "short_name": "Dijo Studios",
+  "description": "Professional food photographer based in Johannesburg. Bold, high-key culinary aesthetics capturing Mzansi culture.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "categories": ["photography", "food", "business"],
+  "icons": [
+    { "src": "images/logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "images/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
