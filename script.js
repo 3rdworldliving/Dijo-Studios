@@ -151,20 +151,21 @@ function initLoader(onComplete) {
 
   function triggerBlobReveal() {
     gsap.to(txt, { opacity: 0, scale: 1.05, duration: 0.4, ease: 'power2.inOut' });
-    const blob = loader.querySelector('.loader-blob');
-    blob.style.clipPath = 'circle(200vmax at 0% 100%)';
-    const tl = gsap.timeline({
-      onComplete: () => {
-        loader.remove();
-        document.body.style.overflow = '';
-        if (typeof lenis !== 'undefined') lenis.start();
-        if (onComplete) onComplete();
-      }
-    });
-    tl.fromTo(blob,
-      { clipPath: 'circle(200vmax at 0% 100%)' },
-      { clipPath: 'circle(0% at 0% 100%)', duration: 1.1, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }
-    );
+
+    // Dark tiles cover the gold loader, then retract to reveal the page.
+    setTimeout(async () => {
+      await tileCover('#0a0a0a');
+      // Hide the gold so the page shows through when tiles retract
+      const blob = loader.querySelector('.loader-blob');
+      if (blob) blob.style.background = 'transparent';
+      loader.style.background = 'transparent';
+      await new Promise(r => setTimeout(r, 300)); // brief hold
+      await tileReveal();
+      loader.remove();
+      document.body.style.overflow = '';
+      if (typeof lenis !== 'undefined') lenis.start();
+      if (onComplete) onComplete();
+    }, 400);
   }
 
   // Safety backup
@@ -184,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initGlobalEvents();
   initNavScramble();
   initCustomCursor();
+  initTileLoader(); // create the tile overlay early so the loader can use it
   setActiveNavLink();
   document.querySelectorAll('.copyright-year').forEach(el => {
     el.textContent = new Date().getFullYear();
@@ -319,33 +321,88 @@ function initLogoScramble() {
 }
 
 /* ═══════════════════════════════════════════════
-   5. BARBA TRANSITIONS — gold blob clip-path wipe
+   4b. TILE LOADER — staggered horizontal tile transition
 ═══════════════════════════════════════════════ */
-function initBarba() {
+/* 5 horizontal tiles (each 20% of viewport height) slide in from the left
+   with a staggered delay (0s, 0.2s, 0.4s, 0.6s, 0.8s), covering the screen
+   top-to-bottom. A spinner appears centered during the hold. Used for both
+   the initial loader reveal (dark tiles covering the gold) and all Barba
+   page-to-page transitions (yellow tiles covering the old page).
+   - tileCover(color): tiles expand to cover the screen
+   - tileReveal():      tiles retract to reveal what's underneath */
+
+function initTileLoader() {
+  if (document.getElementById('pt-overlay')) return;
   const overlay = document.createElement('div');
   overlay.id = 'pt-overlay';
-  overlay.innerHTML = `<div class="pt-blob"></div>`;
+  overlay.innerHTML = `
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile"></div>
+    <div class="tile-icon">
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">
+        <path opacity="0.2" fill="#000" d="M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946s14.946-6.691,14.946-14.946C35.146,11.861,28.455,5.169,20.201,5.169z M20.201,31.749c-6.425,0-11.634-5.208-11.634-11.634c0-6.425,5.209-11.634,11.634-11.634c6.425,0,11.633,5.209,11.633,11.634C31.834,26.541,26.626,31.749,20.201,31.749z"/>
+        <path fill="#000" d="M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0C22.32,8.481,24.301,9.057,26.013,10.047z">
+          <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.5s" repeatCount="indefinite"/>
+        </path>
+      </svg>
+    </div>`;
   document.body.appendChild(overlay);
-  const blob = overlay.querySelector('.pt-blob');
-  blob.style.clipPath = 'circle(0% at 0% 100%)';
+}
+
+/* Tiles expand to cover the screen. Returns a Promise that resolves when
+   the last tile has finished expanding (0.8s delay + 0.7s transition = 1.5s). */
+function tileCover(color) {
+  return new Promise((resolve) => {
+    initTileLoader();
+    const overlay = document.getElementById('pt-overlay');
+    overlay.style.setProperty('--tile-color', color);
+    // Spinner colour: contrast with the tile colour
+    const isDark = color === '#0a0a0a' || color === '#000';
+    const spinnerColor = isDark ? '#ffc62d' : '#0a0a0a';
+    overlay.querySelectorAll('.tile-icon path').forEach(p => p.setAttribute('fill', spinnerColor));
+    // Force reflow so the width:0 state is registered before adding .active
+    void overlay.offsetWidth;
+    overlay.classList.add('active');
+    overlay.style.pointerEvents = 'all';
+    // Last tile finishes at 0.8s delay + 0.7s transition = 1.5s
+    setTimeout(resolve, 1500);
+  });
+}
+
+/* Tiles retract to reveal what's underneath. Same staggered timing. */
+function tileReveal() {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('pt-overlay');
+    if (!overlay) { resolve(); return; }
+    overlay.classList.remove('active');
+    // Last tile finishes retracting at 0.8s delay + 0.7s transition = 1.5s
+    setTimeout(() => {
+      overlay.style.pointerEvents = 'none';
+      resolve();
+    }, 1500);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   5. BARBA TRANSITIONS — tile loader wipe
+═══════════════════════════════════════════════ */
+function initBarba() {
+  initTileLoader();
 
   barba.init({
     prevent: ({ el }) => el.closest('.logo-container') !== null,
-    sync: true,
     transitions: [{
-      name: 'blob-wipe',
+      name: 'tile-wipe',
 
       async leave(data) {
-        // Reduced motion: simple opacity crossfade, no blob clip animation.
         if (_prefersReducedMotion) {
           await gsap.to(data.current.container, { opacity: 0, duration: 0.2, ease: 'power2.out' });
           return;
         }
-        overlay.style.pointerEvents = 'all';
-        await gsap.fromTo(blob,
-          { clipPath: 'circle(0% at 0% 100%)' },
-          { clipPath: 'circle(200vmax at 0% 100%)', duration: _isTouchDevice ? 0.55 : 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }
-        );
+        await tileCover('#ffc62d');
         gsap.set(data.current.container, { opacity: 0 });
       },
 
@@ -355,19 +412,13 @@ function initBarba() {
 
         if (_prefersReducedMotion) {
           await gsap.to(data.next.container, { opacity: 1, duration: 0.3, ease: 'power2.out' });
-          overlay.style.pointerEvents = 'none';
           initPageSpecifics(data.next.namespace);
           return;
         }
 
-        const holdTime = _isTouchDevice ? 0.2 : 0.3;
-        await gsap.delayedCall(holdTime, () => {});
+        await gsap.delayedCall(0.3, () => {});
         gsap.set(data.next.container, { opacity: 1 });
-        await gsap.fromTo(blob,
-          { clipPath: 'circle(200vmax at 0% 100%)' },
-          { clipPath: 'circle(0% at 0% 100%)', duration: _isTouchDevice ? 0.55 : 0.7, ease: 'cubic-bezier(0.85, 0, 0.15, 1)' }
-        );
-        overlay.style.pointerEvents = 'none';
+        await tileReveal();
         initPageSpecifics(data.next.namespace);
       }
     }]
