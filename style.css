@@ -205,6 +205,9 @@ h2 { font-size: clamp(2rem, 6vw, 3.5rem); text-align: center; margin-bottom: 3re
   padding-bottom: 60px;
   background: radial-gradient(ellipse at left center, rgba(255,198,45,0.04) 0%, transparent 60%);
   position: relative;
+  /* Scroll-zoom: scale from centre, GPU-composited for smooth scrubbing */
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
 }
 /* Push the container to the left edge (override .container's auto centering)
    so the text sits against a page-style left margin. */
@@ -588,6 +591,21 @@ footer a:hover { animation: goldPulse 0.8s infinite ease-in-out; }
   will-change: clip-path;
   clip-path: circle(200vmax at 0% 100%);
   z-index: 1;
+}
+/* ── CRT power-on overlay ──
+   Full-screen element that simulates a CRT monitor switching on. Initially
+   a thin bright horizontal line in the centre (the electron beam first
+   firing), it expands vertically to fill the screen with brightness, then
+   flashes white and fades to reveal the gold loader beneath. */
+.crt-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  /* Subtle glow for the CRT beam feel */
+  box-shadow: 0 0 40px 10px rgba(255, 255, 255, 0.4);
 }
 .loader-content-wrap {
   position: relative;
