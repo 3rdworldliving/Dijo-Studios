@@ -84,6 +84,7 @@ function initLoader(onComplete) {
   loader.id = 'site-loader';
   loader.innerHTML = `
     <div class="loader-blob"></div>
+    <div class="crt-overlay"></div>
     <div class="loader-content-wrap">
       <span id="loader-text">DIJO STUDIOS</span>
     </div>
@@ -92,12 +93,18 @@ function initLoader(onComplete) {
   document.body.style.overflow = 'hidden';
 
   const txt = document.getElementById('loader-text');
+  const blob = loader.querySelector('.loader-blob');
+  const crt = loader.querySelector('.crt-overlay');
 
-  // Reduced motion: static text, brief hold, simple fade out (no scramble, no blob clip animation).
+  // Initially hide the gold and text — the CRT effect plays first.
+  if (blob) blob.style.opacity = '0';
+  if (txt) txt.style.opacity = '0';
+
+  // Reduced motion: skip CRT, skip scramble, simple fade.
   if (_prefersReducedMotion) {
+    if (blob) blob.style.opacity = '1';
+    if (crt) crt.style.display = 'none';
     gsap.fromTo(txt, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power2.out' });
-    const blob = loader.querySelector('.loader-blob');
-    if (blob) blob.style.display = 'none';
     setTimeout(() => {
       gsap.to(loader, {
         opacity: 0, duration: 0.35, ease: 'power2.out',
@@ -112,42 +119,80 @@ function initLoader(onComplete) {
     return;
   }
 
-  const TARGET = 'DIJO STUDIOS';
-  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
-  const FRAME_MS = 70, STAGGER = 90, SPINS = 10;
-
-  txt.innerHTML = TARGET.split('').map(ch =>
-    ch === ' '
-      ? '<span class="lch" style="display:inline-block;width:0.35em">&nbsp;</span>'
-      : `<span class="lch" data-final="${ch}">${ch}</span>`
-  ).join('');
-
-  const letterSpans = txt.querySelectorAll('span.lch[data-final]');
-  let lettersLanded = 0;
-
-  gsap.fromTo(txt, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' });
-
-  letterSpans.forEach((span, i) => {
-    const finalChar = span.dataset.final;
-    let frame = 0;
-    setTimeout(() => {
-      const iv = setInterval(() => {
-        if (frame < SPINS) {
-          span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
-          span.style.color = '#0a0a0a';
-        } else {
-          clearInterval(iv);
-          span.textContent = finalChar;
-          span.style.color = '';
-          lettersLanded++;
-          if (lettersLanded === letterSpans.length) {
-            setTimeout(() => { triggerBlobReveal(); }, 1000);
-          }
-        }
-        frame++;
-      }, FRAME_MS);
-    }, i * STAGGER);
+  // ── CRT power-on sequence ──
+  // 1. Thin horizontal line in the centre (the CRT beam first firing)
+  // 2. Line expands vertically to fill the screen (deflection yoke ramping up)
+  // 3. Brief brightness flash (white glow that fades)
+  // 4. CRT overlay fades to reveal the gold loader beneath
+  // 5. Gold background + scramble text fade in
+  const crtTl = gsap.timeline({
+    onComplete: () => { startScramble(); }
   });
+
+  // The CRT overlay is a full-screen element with a bright centre line.
+  // We animate its clip-path to simulate the line expanding vertically.
+  crtTl.set(crt, { opacity: 1, clipPath: 'inset(49% 0 49% 0)' }); // 2px line at centre
+  crtTl.to(crt, {
+    clipPath: 'inset(0% 0 0% 0)',
+    duration: 0.45,
+    ease: 'power3.out'
+  });
+  // Brief brightness flash (overlay goes white briefly)
+  crtTl.to(crt, {
+    backgroundColor: '#ffffff',
+    duration: 0.08,
+    ease: 'power2.in'
+  });
+  crtTl.to(crt, {
+    opacity: 0,
+    duration: 0.25,
+    ease: 'power2.out'
+  });
+  // Gold background fades in alongside the CRT fading out
+  crtTl.to(blob, {
+    opacity: 1,
+    duration: 0.3,
+    ease: 'power2.out'
+  }, '<');
+
+  function startScramble() {
+    const TARGET = 'DIJO STUDIOS';
+    const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@!&%';
+    const FRAME_MS = 70, STAGGER = 90, SPINS = 10;
+
+    txt.innerHTML = TARGET.split('').map(ch =>
+      ch === ' '
+        ? '<span class="lch" style="display:inline-block;width:0.35em">&nbsp;</span>'
+        : `<span class="lch" data-final="${ch}">${ch}</span>`
+    ).join('');
+
+    const letterSpans = txt.querySelectorAll('span.lch[data-final]');
+    let lettersLanded = 0;
+
+    gsap.fromTo(txt, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' });
+
+    letterSpans.forEach((span, i) => {
+      const finalChar = span.dataset.final;
+      let frame = 0;
+      setTimeout(() => {
+        const iv = setInterval(() => {
+          if (frame < SPINS) {
+            span.textContent = CHARS[Math.floor(Math.random() * CHARS.length)];
+            span.style.color = '#0a0a0a';
+          } else {
+            clearInterval(iv);
+            span.textContent = finalChar;
+            span.style.color = '';
+            lettersLanded++;
+            if (lettersLanded === letterSpans.length) {
+              setTimeout(() => { triggerBlobReveal(); }, 1000);
+            }
+          }
+          frame++;
+        }, FRAME_MS);
+      }, i * STAGGER);
+    });
+  }
 
   function triggerBlobReveal() {
     gsap.to(txt, { opacity: 0, scale: 1.05, duration: 0.4, ease: 'power2.inOut' });
@@ -463,6 +508,7 @@ function initPageSpecifics(namespace) {
     // spotlight (hover-gold) effect starts once typing finishes.
     initHeadlineTypewriter(() => initHeadlineSpotlight());
     initScrollIndicator();
+    initHeroZoom();
     initStaticGallery();
     initPortfolioEffects();
   }
@@ -510,6 +556,36 @@ function initScrollIndicator() {
     lenis.on('scroll', updateIndicatorVisibility);
   }
   updateIndicatorVisibility();
+}
+
+/* ═══════════════════════════════════════════════
+   6b. HERO SCROLL ZOOM
+═══════════════════════════════════════════════ */
+/* As the user scrolls down from the top of the home page, the hero section
+   scales up (zooms in) and fades slightly, creating the feeling of diving
+   INTO the page to reveal the gallery below. The gallery slides up over the
+   zooming hero. Uses ScrollTrigger scrub so the zoom tracks scroll position
+   1:1 — scroll faster, zoom faster. */
+function initHeroZoom() {
+  const hero = document.querySelector('.hero-centered');
+  if (!hero) return;
+  if (_prefersReducedMotion) return; // no scroll-driven motion for reduced-motion users
+
+  // Scale the hero content as the user scrolls through the first viewport height.
+  // scrub:1 gives a smooth 1-second lag behind the scroll for a premium feel.
+  gsap.to(hero, {
+    scale: 1.6,
+    opacity: 0,
+    filter: 'blur(8px)',
+    ease: 'none',
+    scrollTrigger: {
+      trigger: hero,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 1,
+      pin: false
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════
